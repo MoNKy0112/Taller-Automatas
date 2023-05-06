@@ -1,3 +1,4 @@
+package TALLER;
 public class Estado {
     private static int cont = 0;
     private int id;
@@ -14,6 +15,10 @@ public class Estado {
 
     public Estado() {
         this.id = ++cont;
+    }
+
+    public Estado(int id) {
+        this.id = id;
     }
 
 
@@ -64,8 +69,7 @@ public class Estado {
 
     @Override
     public String toString() {
-        return "Estado [id=" + id + ", limbo=" + limbo + ", accesible=" + accesible + ", aceptacion=" + aceptacion
-                + ", inicial=" + inicial + "]";
+        return "q" + id;
     }
 
     
