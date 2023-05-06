@@ -196,6 +196,7 @@ public class AFD {
         
     }
     public boolean procesarCadenaConDetalles(String cadena){
+        System.out.println("proceso con cadena: "+cadena);
         Estado estadoActual = estadoInicial;
         System.out.println("Estado inicial: "+estadoActual);
         for(int i=0;i<cadena.length();i++){
@@ -208,8 +209,17 @@ public class AFD {
     public void procesarListaCadenas(String[] cadenas,String nombreArchivo, boolean imprimirPantalla){
         //TODO 
     }
-    public AFD hallarComplemento(AFD afdInput){
+    public AFD hallarComplemento(){
         AFD afd = new AFD(alfabeto, estados, funcionDeTrancision);
+        afd.setEstadoInicial(estadoInicial);
+        ArrayList<Estado> aceptacion = new ArrayList<>();
+        for (Estado estado: estados){
+            if(!getEstadosDeAceptacion().contains(estado)){
+                estado.setAceptacion(true);
+                aceptacion.add(estado);
+            } 
+        }
+        afd.setEstadosDeAceptacion(aceptacion);
         return afd;
         //TODO
     }
@@ -292,12 +302,21 @@ public class AFD {
         afd.setEstadosDeAceptacion(estadosAcept);
         System.out.println(afd.getEstadosDeAceptacion());
         afd.hallarEstadosLimbo();
-        System.out.println(afd.getEstadosLimbo());
+        System.out.println("Estados llimbo: "+afd.getEstadosLimbo());
         afd.hallarEstadosInaccesibles();
-        System.out.println(afd.getEstadosInaccesibles());
+        System.out.println("Estados inaccesibles: "+afd.getEstadosInaccesibles());
         System.out.println(afd.procesarCadenaConDetalles("01"));
         System.out.println(afd.procesarCadenaConDetalles("010"));
         System.out.println(afd.procesarCadenaConDetalles("011"));
+        System.out.println("---------------AFD2-------------");
+        AFD afd2 = afd.hallarComplemento();
+        afd2.hallarEstadosLimbo();
+        System.out.println("Estados llimbo: "+afd2.getEstadosLimbo());
+        afd2.hallarEstadosInaccesibles();
+        System.out.println("Estados inaccesibles: "+afd2.getEstadosInaccesibles());
+        System.out.println(afd2.procesarCadenaConDetalles("01"));
+        System.out.println(afd2.procesarCadenaConDetalles("010"));
+        System.out.println(afd2.procesarCadenaConDetalles("011"));
         System.exit(0);
     }
 }
