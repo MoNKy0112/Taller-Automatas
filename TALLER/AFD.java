@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 
 
@@ -38,6 +39,10 @@ public class AFD {
         this.funcionDeTrancision = funcionDeTrancision;
     }
 
+    public AFD() {
+        this.funcionDeTrancision = new HashMap<>();
+    }
+
     public void verificarCorregirCompletitudAFD(){
         Estado estadoLimboNuevo = null;
         for (Estado estado : estados){
@@ -47,13 +52,13 @@ public class AFD {
                         estadoLimboNuevo = new Estado();
                         //agregarEstado(estadoLimboNuevo);
                     }
-                    addTransicion(estado, simbolo, estadoLimboNuevo);
+                    agregarTransicion(estado, simbolo, estadoLimboNuevo);
                 }
             }
         }
     }
 
-    public void addTransicion(Estado estadoOrigen,char simbolo, Estado estadoDestino){
+    public void agregarTransicion(Estado estadoOrigen,char simbolo, Estado estadoDestino){
         if (!this.alfabeto.contieneSimbolo(simbolo)){
             throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
         }
@@ -139,17 +144,17 @@ public class AFD {
     }
     
     public ArrayList<Estado> hallarEstadosInaccesibles(){
-        boolean[] accesibles = new boolean[estados.size()];
+        Set<Estado> accesibles = new HashSet<>();
         Queue<Estado> queue = new LinkedList<>();
         queue.offer(estadoInicial);
-        accesibles[estadoInicial.getId()-1] = true;
+        accesibles.add(estadoInicial);
 
         while (!queue.isEmpty()) {
             Estado estadoActual = queue.poll();
             for (char simbolo: alfabeto.getSimbolos()) {
                 Estado estadoSig = transicion(estadoActual, simbolo);
-                if (estadoSig != null && !accesibles[estadoSig.getId()-1]) {
-                    accesibles[estadoSig.getId()-1] = true;
+                if (estadoSig != null && !accesibles.contains(estadoSig)) {
+                    accesibles.add(estadoSig);
                     queue.offer(estadoSig);
                 }
             }
@@ -157,8 +162,8 @@ public class AFD {
 
         ArrayList<Estado> inaccesibles = new ArrayList<>();
         for (Estado estado : estados) {
-            estado.setAccesible(accesibles[estado.getId()-1]);
-            if (!accesibles[estado.getId()-1]) {
+            estado.setAccesible(accesibles.contains(estado));
+            if (!accesibles.contains(estado)) {
                 inaccesibles.add(estado);
             }
         }
@@ -221,7 +226,50 @@ public class AFD {
         }
         afd.setEstadosDeAceptacion(aceptacion);
         return afd;
-        //TODO
+    }
+    public AFD productoCartesianoY(AFD afd1, AFD afd2){
+        AFD resultado = new AFD();
+        Set<Estado> estadosProducto = new HashSet<>();
+        Map<String, Estado> estadoMap = new HashMap<>();
+        ArrayList<Estado> estadosRes = new ArrayList<>();
+        // Se crean todos los estados del producto cartesiano
+        for (Estado estado1 : afd1.getEstados()) {
+            for (Estado estado2 : afd2.getEstados()) {
+                String estadoProducto = estado1.toString()+","+estado2.toString();
+                Estado estado = new Estado(new Estado[] {estado1,estado2});
+                estadosProducto.add(estado);
+                System.out.println(estadoProducto+"->"+estado);
+                estadoMap.put(estadoProducto, estado);
+                estadosRes.add(estado);
+                // Si ambos estados son de aceptación, entonces el estado del producto cartesiano también lo es
+                if (afd1.getEstadosDeAceptacion().contains(estado1) && afd2.getEstadosDeAceptacion().contains(estado2)) {
+                    resultado.agregarEstadoAceptacion(estado);
+                }
+            }
+        }
+        resultado.setEstados(estadosRes);
+        // Se configuran los datos del AFD resultante
+        resultado.setAlfabeto(afd1.getAlfabeto());
+        resultado.setEstadoInicial(estadoMap.get(afd1.getEstadoInicial().toString()+","+afd2.getEstadoInicial().toString()));
+        System.out.println(resultado.getEstadosDeAceptacion());
+        // Se agregan las transiciones correspondientes
+        for (Estado estado : estadosProducto) {
+            for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
+                Estado[] estados = estado.getEstados();
+                String est = afd1.transicion(estados[0], simbolo)+","+afd2.transicion(estados[1], simbolo);
+                System.out.println(estado+":"+est+"-> "+estadoMap.get(est));
+                Estado estado1 = estadoMap.get(est);
+                resultado.agregarTransicion(estado, simbolo, estado1);
+            }
+        }
+
+        return resultado;
+    }
+    
+    
+    private void agregarEstadoAceptacion(Estado estado) {
+        estado.setAceptacion(true);
+        estadosDeAceptacion.add(estado);
     }
 
     // Getters & Setters
@@ -308,8 +356,22 @@ public class AFD {
         System.out.println(afd.procesarCadenaConDetalles("01"));
         System.out.println(afd.procesarCadenaConDetalles("010"));
         System.out.println(afd.procesarCadenaConDetalles("011"));
+        
         System.out.println("---------------AFD2-------------");
-        AFD afd2 = afd.hallarComplemento();
+        ArrayList<Estado> estados2 = new ArrayList<Estado>();
+        for (int i = 0; i < numEstados; i++) {
+            estados2.add(new Estado());
+        }  
+        AFD afd2 = new AFD(alf, estados2, funcionDeTransicion);
+        afd2.fillTransitions();
+        System.out.println("transiciones: "+afd2.getFuncionDeTrancision());
+        ArrayList<Estado> estadosAcept2 = new ArrayList<>();
+        estadosAcept2.add(estados2.get(0));
+        //estadosAcept.add(estados.get(8));
+        afd2.setEstadoInicial(estados2.get(0));
+        System.out.println(afd2.getEstadoInicial());
+        afd2.setEstadosDeAceptacion(estadosAcept2);
+        System.out.println(afd2.getEstadosDeAceptacion());
         afd2.hallarEstadosLimbo();
         System.out.println("Estados llimbo: "+afd2.getEstadosLimbo());
         afd2.hallarEstadosInaccesibles();
@@ -317,6 +379,19 @@ public class AFD {
         System.out.println(afd2.procesarCadenaConDetalles("01"));
         System.out.println(afd2.procesarCadenaConDetalles("010"));
         System.out.println(afd2.procesarCadenaConDetalles("011"));
+
+
+        AFD afd3 = afd.productoCartesianoY(afd, afd2);
+        System.out.println(afd3.getEstados()+","+afd3.getEstadoInicial()+","+afd3.getEstadosDeAceptacion());
+        System.out.println(afd3.getFuncionDeTrancision());
+        /*AFD afd2 = afd.hallarComplemento();
+        afd2.hallarEstadosLimbo();
+        System.out.println("Estados llimbo: "+afd2.getEstadosLimbo());
+        afd2.hallarEstadosInaccesibles();
+        System.out.println("Estados inaccesibles: "+afd2.getEstadosInaccesibles());
+        System.out.println(afd2.procesarCadenaConDetalles("01"));
+        System.out.println(afd2.procesarCadenaConDetalles("010"));
+        System.out.println(afd2.procesarCadenaConDetalles("011"));*/
         System.exit(0);
     }
 }
