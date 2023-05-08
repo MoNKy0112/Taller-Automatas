@@ -211,9 +211,11 @@ public class AFD {
         return estadosDeAceptacion.contains(estadoActual) ? true : false;
         
     }
+
     public void procesarListaCadenas(String[] cadenas,String nombreArchivo, boolean imprimirPantalla){
         //TODO 
     }
+
     public AFD hallarComplemento(){
         AFD afd = new AFD(alfabeto, estados, funcionDeTrancision);
         afd.setEstadoInicial(estadoInicial);
@@ -227,6 +229,7 @@ public class AFD {
         afd.setEstadosDeAceptacion(aceptacion);
         return afd;
     }
+
     public AFD productoCartesianoY(AFD afd1, AFD afd2){
         AFD resultado = new AFD();
         Set<Estado> estadosProducto = new HashSet<>();
@@ -265,8 +268,126 @@ public class AFD {
 
         return resultado;
     }
+
+    public AFD productoCartesianoO(AFD afd1, AFD afd2){
+        AFD resultado = new AFD();
+        Set<Estado> estadosProducto = new HashSet<>();
+        Map<String, Estado> estadoMap = new HashMap<>();
+        ArrayList<Estado> estadosRes = new ArrayList<>();
+        // Se crean todos los estados del producto cartesiano
+        for (Estado estado1 : afd1.getEstados()) {
+            for (Estado estado2 : afd2.getEstados()) {
+                String estadoProducto = estado1.toString()+","+estado2.toString();
+                Estado estado = new Estado(new Estado[] {estado1,estado2});
+                estadosProducto.add(estado);
+                System.out.println(estadoProducto+"->"+estado);
+                estadoMap.put(estadoProducto, estado);
+                estadosRes.add(estado);
+                // Si ambos estados son de aceptación, entonces el estado del producto cartesiano también lo es
+                if (afd1.getEstadosDeAceptacion().contains(estado1) || afd2.getEstadosDeAceptacion().contains(estado2)) {
+                    resultado.agregarEstadoAceptacion(estado);
+                }
+            }
+        }
+        resultado.setEstados(estadosRes);
+        // Se configuran los datos del AFD resultante
+        resultado.setAlfabeto(afd1.getAlfabeto());
+        resultado.setEstadoInicial(estadoMap.get(afd1.getEstadoInicial().toString()+","+afd2.getEstadoInicial().toString()));
+        System.out.println(resultado.getEstadosDeAceptacion());
+        // Se agregan las transiciones correspondientes
+        for (Estado estado : estadosProducto) {
+            for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
+                Estado[] estados = estado.getEstados();
+                String est = afd1.transicion(estados[0], simbolo)+","+afd2.transicion(estados[1], simbolo);
+                System.out.println(estado+":"+est+"-> "+estadoMap.get(est));
+                Estado estado1 = estadoMap.get(est);
+                resultado.agregarTransicion(estado, simbolo, estado1);
+            }
+        }
+
+        return resultado;
+    }
     
+    public AFD productoCartesianoDiferencia(AFD afd1, AFD afd2){
+        AFD resultado = new AFD();
+        Set<Estado> estadosProducto = new HashSet<>();
+        Map<String, Estado> estadoMap = new HashMap<>();
+        ArrayList<Estado> estadosRes = new ArrayList<>();
+        // Se crean todos los estados del producto cartesiano
+        for (Estado estado1 : afd1.getEstados()) {
+            for (Estado estado2 : afd2.getEstados()) {
+                String estadoProducto = estado1.toString()+","+estado2.toString();
+                Estado estado = new Estado(new Estado[] {estado1,estado2});
+                estadosProducto.add(estado);
+                System.out.println(estadoProducto+"->"+estado);
+                estadoMap.put(estadoProducto, estado);
+                estadosRes.add(estado);
+                // Si ambos estados son de aceptación, entonces el estado del producto cartesiano también lo es
+                if (afd1.getEstadosDeAceptacion().contains(estado1) && !afd2.getEstadosDeAceptacion().contains(estado2)) {
+                    resultado.agregarEstadoAceptacion(estado);
+                }
+            }
+        }
+        resultado.setEstados(estadosRes);
+        // Se configuran los datos del AFD resultante
+        resultado.setAlfabeto(afd1.getAlfabeto());
+        resultado.setEstadoInicial(estadoMap.get(afd1.getEstadoInicial().toString()+","+afd2.getEstadoInicial().toString()));
+        System.out.println(resultado.getEstadosDeAceptacion());
+        // Se agregan las transiciones correspondientes
+        for (Estado estado : estadosProducto) {
+            for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
+                Estado[] estados = estado.getEstados();
+                String est = afd1.transicion(estados[0], simbolo)+","+afd2.transicion(estados[1], simbolo);
+                System.out.println(estado+":"+est+"-> "+estadoMap.get(est));
+                Estado estado1 = estadoMap.get(est);
+                resultado.agregarTransicion(estado, simbolo, estado1);
+            }
+        }
+
+        return resultado;
+    }
     
+    public AFD productoCartesianoDiferenciaSimetrica(AFD afd1, AFD afd2){
+        AFD resultado = new AFD();
+        Set<Estado> estadosProducto = new HashSet<>();
+        Map<String, Estado> estadoMap = new HashMap<>();
+        ArrayList<Estado> estadosRes = new ArrayList<>();
+        // Se crean todos los estados del producto cartesiano
+        for (Estado estado1 : afd1.getEstados()) {
+            for (Estado estado2 : afd2.getEstados()) {
+                String estadoProducto = estado1.toString()+","+estado2.toString();
+                Estado estado = new Estado(new Estado[] {estado1,estado2});
+                estadosProducto.add(estado);
+                System.out.println(estadoProducto+"->"+estado);
+                estadoMap.put(estadoProducto, estado);
+                estadosRes.add(estado);
+                // Si ambos estados son de aceptación, entonces el estado del producto cartesiano también lo es
+                boolean cond1 = afd1.getEstadosDeAceptacion().contains(estado1);
+                boolean cond2 = afd2.getEstadosDeAceptacion().contains(estado2);
+                if ((cond1 || cond2) && !(cond1 && cond2)) {
+                    resultado.agregarEstadoAceptacion(estado);
+                }
+            }
+        }
+        resultado.setEstados(estadosRes);
+        // Se configuran los datos del AFD resultante
+        resultado.setAlfabeto(afd1.getAlfabeto());
+        resultado.setEstadoInicial(estadoMap.get(afd1.getEstadoInicial().toString()+","+afd2.getEstadoInicial().toString()));
+        System.out.println(resultado.getEstadosDeAceptacion());
+        // Se agregan las transiciones correspondientes
+        for (Estado estado : estadosProducto) {
+            for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
+                Estado[] estados = estado.getEstados();
+                String est = afd1.transicion(estados[0], simbolo)+","+afd2.transicion(estados[1], simbolo);
+                System.out.println(estado+":"+est+"-> "+estadoMap.get(est));
+                Estado estado1 = estadoMap.get(est);
+                resultado.agregarTransicion(estado, simbolo, estado1);
+            }
+        }
+
+        return resultado;
+    }
+
     private void agregarEstadoAceptacion(Estado estado) {
         estado.setAceptacion(true);
         estadosDeAceptacion.add(estado);
