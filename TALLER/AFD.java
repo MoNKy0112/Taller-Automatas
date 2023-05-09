@@ -126,19 +126,20 @@ public class AFD {
                     return true;
                 }
                 //Verifica si esta en visitados pero no en noMuertos, por lo cual seria un estado muerto
-                if (visitados.contains(estadoSig))return false; 
-                
-                //si no esta en ninguno de los dos, hay que recorrer mas y verificar si se llega a
-                //algun estado de aceptacion
-                if(dfsLimbo(estadoSig, visitados, noMuertos)){
-                    noMuertos.add(estadoActual);
-                    return true;
-                }
-                //De no ser asi por este camino solo hay estados limbo, por lo cual este es un estado limbo
-                
+                if (!visitados.contains(estadoSig)){
+                    //si no esta en ninguno de los dos, hay que recorrer mas y verificar si se llega a
+                    //algun estado de aceptacion
+                    if(dfsLimbo(estadoSig, visitados, noMuertos)){
+                        noMuertos.add(estadoActual);
+                        return true;
+                    }
+                }                 
+                //De no ser asi por este camino solo hay estados limbo
+                //Por lo cual debe revisar los demas caminos
             }
             
         }
+        //Si ningun camino lo llevo a un estado de aceptacion, se entiende que este es un estado limbo
         return false;
         
     }
