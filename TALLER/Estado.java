@@ -1,6 +1,6 @@
 package TALLER;
 public class Estado {
-    private static int cont = 0;
+    private static int cont = -1;
     private int id;
     private boolean limbo, accesible, aceptacion, inicial;
     private Estado[] estados;

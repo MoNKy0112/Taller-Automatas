@@ -394,6 +394,139 @@ public class AFD {
         estadosDeAceptacion.add(estado);
     }
 
+    public AFD simplificarAFD(AFD afdInput){
+        AFD sinInaccesibles = eliminarEstadosInaccesibles(afdInput);
+        Estado[] estados = new Estado[sinInaccesibles.getEstados().size()];
+        estados = sinInaccesibles.getEstados().toArray(estados);
+        AFD nuevoAfd = new AFD();
+        Character[][] TablaEquivalencia = new Character[estados.length][estados.length];
+        ArrayList<ArrayList<Estado[]>> tablaTransiciones = new ArrayList<ArrayList<Estado[]>>();
+        int iteracion = 1;
+        for (int i=0;i<estados.length;i++){
+            for (int j=i;j<estados.length;j++){
+                if(estados[i].isAceptacion()!=estados[j].isAceptacion()){
+                    TablaEquivalencia[i][j]=TablaEquivalencia[j][i]=(char)(iteracion+'0');
+                }else if(i!=j){
+                    ArrayList<Estado[]> inner= new ArrayList<>();
+                    inner.add(new Estado[] {estados[i],estados[j]});
+                    for (char simbolo:sinInaccesibles.getAlfabeto().getSimbolos()){
+                        inner.add(new Estado[] {transicion(estados[i], simbolo) , transicion(estados[j], simbolo)});
+                    }
+                    tablaTransiciones.add(inner);
+                }
+            }
+        }
+
+        boolean cambio = true;
+
+        while(cambio) {
+            cambio = false;
+            iteracion++;
+
+            for(int i=0;i<tablaTransiciones.size();i++){
+                for(int j=0;j<sinInaccesibles.getAlfabeto().size();j++){
+                    Estado [] estadosAct = tablaTransiciones.get(i).get(j+1);
+                    int x = sinInaccesibles.getEstados().indexOf(estadosAct[0]);
+                    int y = sinInaccesibles.getEstados().indexOf(estadosAct[1]);
+                    Estado [] temp = tablaTransiciones.get(i).get(j);
+                    int x2 = sinInaccesibles.getEstados().indexOf(temp[0]);
+                    int y2 = sinInaccesibles.getEstados().indexOf(temp[1]);
+                    if((TablaEquivalencia[x2][y2] == null||TablaEquivalencia[y2][x2] == null)
+                    && (TablaEquivalencia[x][y] != null || TablaEquivalencia[y][x] != null)){
+                        TablaEquivalencia[x2][y2] = TablaEquivalencia[y2][x2] = (char)(iteracion+'0');
+                        cambio = true;
+                    }
+                }
+            }
+        }
+
+
+       
+        for(int i=0;i<tablaTransiciones.size();i++){
+            for(int j=0;j<sinInaccesibles.getAlfabeto().size()+1;j++){
+                System.out.print(tablaTransiciones.get(i).get(j)[0]+","+tablaTransiciones.get(i).get(j)[1]+"->");
+                
+            }
+            System.out.println(" ");
+        }
+
+        for (int i=0;i<estados.length;i++){
+            for (int j=0;j<estados.length;j++){
+                if(i!=j && TablaEquivalencia[i][j]==null)TablaEquivalencia[i][j]='E';
+            }
+        }
+        for (int i=0;i<estados.length;i++){
+            for (int j=0;j<i;j++){
+                System.out.print(TablaEquivalencia[i][j]);
+            }
+            System.out.println();
+        }
+
+        ArrayList<ArrayList<Estado>> equivalentes = new ArrayList<ArrayList<Estado>>();
+        ArrayList<Estado> revisados = new ArrayList<>();
+        for (int i=0;i<estados.length;i++){
+            if (!revisados.contains(estados[i])){
+                ArrayList<Estado> inner= new ArrayList<>();
+                inner.add(estados[i]);
+                revisados.add(estados[i]);
+                for (int j=0;j<estados.length;j++){
+                    if(TablaEquivalencia[i][j]!=null){
+                        if(TablaEquivalencia[i][j]=='E'){
+                            inner.add(estados[j]);
+                            revisados.add(estados[j]);
+                        }  
+                    }
+                }   
+                equivalentes.add(inner);
+            } 
+        }
+
+        for (ArrayList<Estado> array : equivalentes){
+            for (Estado estado : array){
+                System.out.print(estado);
+            }
+            System.out.println();
+        }
+
+        
+        
+        
+        /*
+        ArrayList<Estado> yaRevisados = new ArrayList<>();
+        ArrayList<ArrayList<Estado>> Equivalentes = new ArrayList<ArrayList<Estado>>();
+        for (int i=1;i<estados.length;i++){
+            for (int j=1;j<estados.length;j++){
+
+                if(!yaRevisados.contains()){
+                    if(TablaEquivalencia[i][j]!=null){
+
+                    }
+                }
+            }
+        }*/
+
+        
+        
+        return nuevoAfd;
+    }
+
+    private AFD eliminarEstadosInaccesibles(AFD afdInput){
+        ArrayList<Estado> nuevosEstados= new ArrayList<>();
+        nuevosEstados.addAll(afdInput.getEstados());
+        ArrayList<Estado> nuevosEstados2= new ArrayList<>();
+        nuevosEstados2.addAll(nuevosEstados);
+        HashMap<Estado, HashMap<Character,Estado>> nuevaFuncionTransicion = afdInput.getFuncionDeTrancision();
+        for (Estado estado : nuevosEstados){
+            if (!estado.isAccesible()){
+                nuevaFuncionTransicion.remove(estado);
+                nuevosEstados2.remove(estado);
+            }
+        }
+        AFD nuevoAfd = new AFD(afdInput.getAlfabeto(),nuevosEstados2,nuevaFuncionTransicion);
+        
+        return nuevoAfd;
+    }
+
     // Getters & Setters
     public Alfabeto getAlfabeto() {
         return alfabeto;
@@ -446,9 +579,9 @@ public class AFD {
     }
 
     public static void main(String[] args){
-        char[] simbolos = {'0','1'};
+        char[] simbolos = {'a','b'};
         Alfabeto alf = new Alfabeto(simbolos);
-        int numEstados = 2;
+        int numEstados = 5;
         ArrayList<Estado> estados = new ArrayList<Estado>();
         for (int i = 0; i < numEstados; i++) {
             estados.add(new Estado());
@@ -465,8 +598,10 @@ public class AFD {
         afd.fillTransitions();
         System.out.println("transiciones: "+afd.getFuncionDeTrancision());
         ArrayList<Estado> estadosAcept = new ArrayList<>();
-        estadosAcept.add(estados.get(0));
+        estados.get(4).setAceptacion(true);
+        estadosAcept.add(estados.get(4));
         //estadosAcept.add(estados.get(8));
+        estados.get(0).setInicial(true);
         afd.setEstadoInicial(estados.get(0));
         System.out.println(afd.getEstadoInicial());
         afd.setEstadosDeAceptacion(estadosAcept);
@@ -474,7 +609,8 @@ public class AFD {
         afd.hallarEstadosLimbo();
         System.out.println("Estados llimbo: "+afd.getEstadosLimbo());
         afd.hallarEstadosInaccesibles();
-        System.out.println("Estados inaccesibles: "+afd.getEstadosInaccesibles());
+        afd.simplificarAFD(afd);
+        /*System.out.println("Estados inaccesibles: "+afd.getEstadosInaccesibles());
         System.out.println(afd.procesarCadenaConDetalles("01"));
         System.out.println(afd.procesarCadenaConDetalles("010"));
         System.out.println(afd.procesarCadenaConDetalles("011"));
