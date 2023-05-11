@@ -24,11 +24,6 @@ public class Estado {
         this.id = ++cont;
     }
 
-    public Estado(int id) {
-        this.id = id;
-    }
-
-
     //Getters & Setters
     public void setNombre(Estado[] estados) {
         this.estados = estados;
@@ -84,6 +79,13 @@ public class Estado {
 
     @Override
     public String toString() {
+        if(estados!=null){
+            String txt = "";
+            for (int i=0;i<estados.length-1;i++){
+                txt=txt+estados[i].toString()+",";
+            }
+            txt+=estados[estados.length-1].toString();
+        }
         return "q" + id;
     }
 

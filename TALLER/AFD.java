@@ -1,5 +1,6 @@
 package TALLER;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import TALLER.GUITABLA.MatrixGUI;
@@ -37,6 +38,11 @@ public class AFD {
         this.alfabeto = alfabeto;
         this.estados = estados;
         this.funcionDeTrancision = funcionDeTrancision;
+    }
+
+    public AFD(Alfabeto alfabeto) {
+        this.alfabeto = alfabeto;
+        this.funcionDeTrancision = new HashMap<>();
     }
 
     public AFD() {
@@ -398,7 +404,7 @@ public class AFD {
         AFD sinInaccesibles = eliminarEstadosInaccesibles(afdInput);
         Estado[] estados = new Estado[sinInaccesibles.getEstados().size()];
         estados = sinInaccesibles.getEstados().toArray(estados);
-        AFD nuevoAfd = new AFD();
+        AFD nuevoAfd = new AFD(afdInput.getAlfabeto());
         Character[][] TablaEquivalencia = new Character[estados.length][estados.length];
         ArrayList<ArrayList<Estado[]>> tablaTransiciones = new ArrayList<ArrayList<Estado[]>>();
         int iteracion = 1;
@@ -488,25 +494,38 @@ public class AFD {
             System.out.println();
         }
 
-        
-        
-        
-        /*
-        ArrayList<Estado> yaRevisados = new ArrayList<>();
-        ArrayList<ArrayList<Estado>> Equivalentes = new ArrayList<ArrayList<Estado>>();
-        for (int i=1;i<estados.length;i++){
-            for (int j=1;j<estados.length;j++){
-
-                if(!yaRevisados.contains()){
-                    if(TablaEquivalencia[i][j]!=null){
-
-                    }
+        ArrayList<Estado> estadosNuevos = new ArrayList<>();
+        Map<Estado, Estado> estadoMap = new HashMap<>();
+        for (ArrayList<Estado> array : equivalentes){
+            Estado[] estadosNE = new Estado[array.size()];
+            estadosNE = array.toArray(estadosNE);
+            //crear estado nuevo
+            Estado nuevoEstado = new Estado(estadosNE);
+            for(Estado estado:estadosNE){
+                //establecer si es inicial
+                if(estado.isInicial()){
+                    nuevoEstado.setInicial(true);
                 }
+                //establecer si es de aceptacion
+                if(estado.isAceptacion()){
+                    nuevoEstado.setAceptacion(true);
+                }
+                estadoMap.put(estado, nuevoEstado);
             }
-        }*/
-
-        
-        
+            estadosNuevos.add(nuevoEstado);
+        }
+        nuevoAfd.setEstados(estadosNuevos);
+        //agregamos las transiciones 
+        for(Estado estado:estadosNuevos){
+            for(char simbolo : afdInput.getAlfabeto().getSimbolos()){
+                Estado[] estados1 = estado.getEstados();
+                Estado estado1 = estadoMap.get(transicion(estados1[0], simbolo));
+                //solo tomamos la transicion del primer elemento ya que se entiende que si esta bien 
+                //simplificado, todos los estados internos de un estado nuevo iran a un mismo estado nuevo
+                nuevoAfd.agregarTransicion(estado, simbolo, estado1);
+            }
+        }
+            
         return nuevoAfd;
     }
 
@@ -609,7 +628,8 @@ public class AFD {
         afd.hallarEstadosLimbo();
         System.out.println("Estados llimbo: "+afd.getEstadosLimbo());
         afd.hallarEstadosInaccesibles();
-        afd.simplificarAFD(afd);
+        AFD afd4 = afd.simplificarAFD(afd);
+        System.out.println("transiciones nuevo afd: "+ afd4.getFuncionDeTrancision());
         /*System.out.println("Estados inaccesibles: "+afd.getEstadosInaccesibles());
         System.out.println(afd.procesarCadenaConDetalles("01"));
         System.out.println(afd.procesarCadenaConDetalles("010"));
