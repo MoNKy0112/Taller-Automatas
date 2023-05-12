@@ -1,9 +1,12 @@
 package TALLER;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import TALLER.GRAPH.Graph;
 import TALLER.GUITABLA.MatrixGUI;
+import javafx.application.Application;
+import javafx.scene.Group;
+import javafx.stage.Stage;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,8 +14,12 @@ import java.util.Set;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 
 public class AFD {
     //Atributos
@@ -47,6 +54,108 @@ public class AFD {
 
     public AFD() {
         this.funcionDeTrancision = new HashMap<>();
+    }
+
+    public AFD(String nombreArchivo) {
+        File archivo = null;
+        FileReader fr = null;
+        BufferedReader br = null;
+        
+        ArrayList<Estado> estados = new ArrayList<>();
+        HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancision = new HashMap<>();
+        ArrayList<Character> simbolos = new ArrayList<>();
+        Map<String,Estado> mapEstados = new HashMap<>();
+        try {
+            // Apertura del fichero y creacion de BufferedReader para poder
+            // hacer una lectura comoda (disponer del metodo readLine()).
+            archivo = new File (nombreArchivo+".dfa");
+            fr = new FileReader (archivo);
+            br = new BufferedReader(fr);
+            
+            // Lectura del fichero
+            String linea;
+            int status = -1;
+            while((linea=br.readLine())!=null){
+                if(linea=="#alphabet"){
+                    status = 0;
+                }
+                if(linea=="#states"){
+                    status = 1;
+                }
+                if(linea=="#initial"){
+                    status = 2;
+                }
+                if(linea=="#accepting"){
+                    status = 3;
+                }
+                if(linea=="#transitions"){
+                    status = 4;
+                }
+                while(status==0){
+                    if(linea.length()==1){
+                        simbolos.add(linea.toCharArray()[0]);
+                    }else if(linea.contains("-")){
+                        String[] parts = linea.split("-");
+                        int a = (int)parts[0].toCharArray()[0];
+                        int b = (int)parts[1].toCharArray()[0];
+                        for (int i=a;i<b+1;i++){
+                            simbolos.add((char)i);
+                        }
+                    }
+                }
+                while(status==1){
+                    Estado nuevoEstado = new Estado();
+                    mapEstados.put(linea, estadoInicial);
+                    estados.add(nuevoEstado);
+                }
+                while(status==2){
+                    Estado estado = mapEstados.get(linea);
+                    int index = estados.indexOf(estado);
+                    estados.get(index).setInicial(true);
+                }
+                while(status==3){
+                    Estado estado = mapEstados.get(linea);
+                    int index = estados.indexOf(estado);
+                    estados.get(index).setAceptacion(true);
+                }
+                while(status==4){
+                    String[] parts = linea.split(":");
+                    Estado estadoOrigen = mapEstados.get(parts[0]);
+                    String[] parts2 = parts[1].split(">");
+                    char simbolo = parts2[0].toCharArray()[0];
+                    Estado estadoDestino = mapEstados.get(parts2[1]);
+                    HashMap<Character, Estado> transiciones = funcionDeTrancision.getOrDefault(estadoOrigen, new HashMap<>());
+                    transiciones.put(simbolo, estadoDestino);
+                    funcionDeTrancision.put(estadoOrigen, transiciones);
+                }
+                System.out.println(linea);
+            }
+              
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            // En el finally cerramos el fichero, para asegurarnos
+            // que se cierra tanto si todo va bien como si salta 
+            // una excepcion.
+            try{                    
+               if( null != fr ){   
+                  fr.close();     
+               }                  
+            }catch (Exception e2){ 
+               e2.printStackTrace();
+            }
+        }
+        
+        String st = simbolos.toString();
+        char[] simbolosAlf = st.toCharArray();
+        Alfabeto alfabeto = new Alfabeto(simbolosAlf);
+        this.alfabeto = alfabeto;
+        this.estados = estados;
+        this.funcionDeTrancision = funcionDeTrancision;
+
+        //correjirCompletitud
+        hallarEstadosInaccesibles();
+        hallarEstadosLimbo();
     }
 
     public void verificarCorregirCompletitudAFD(){
@@ -180,7 +289,7 @@ public class AFD {
         return inaccesibles;
     }
 
-    private Estado transicion(Estado estadoOrigen, char simbolo){
+    public Estado transicion(Estado estadoOrigen, char simbolo){
         if (!this.alfabeto.contieneSimbolo(simbolo)){
             throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
         }
@@ -195,9 +304,70 @@ public class AFD {
     public void imprimirAFDSimplificado(){
         //por hacer
     }
-    public void exportar(){
-        //por hacer
+    public void exportar(String nombreAarchivo){
+        try {
+            PrintWriter writer = new PrintWriter(nombreAarchivo+".dfa", "UTF-8");
+            writer.println("#!dfa");
+            writer.println("#alphabet");
+            for(char simbolo : alfabeto.getSimbolos()){
+                writer.println(simbolo);
+            }
+            writer.println("#states");
+            for(Estado estado : estados){
+                writer.println(estado.toString());
+            }
+            writer.println("#initial");
+            writer.println(estadoInicial.toString());
+            writer.println("#accepting");
+            for(Estado estado : estadosDeAceptacion){
+                writer.println(estado.toString());
+            }
+            writer.println("#transitions");
+            for(Estado estado : estados){
+                for(char simbolo : alfabeto.getSimbolos()){
+                    writer.println(estado.toString()+":"+simbolo+">"+funcionDeTrancision.get(estado).get(simbolo).toString());
+                }
+            }
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
     }
+
+    public void exportar(){
+        String nombreAarchivo = "nuevoAFD";
+        try {
+            PrintWriter writer = new PrintWriter("/"+nombreAarchivo+".dfa", "UTF-8");
+            writer.println("#!dfa");
+            writer.println("#alphabet");
+            for(char simbolo : alfabeto.getSimbolos()){
+                writer.println(simbolo);
+            }
+            writer.println("#states");
+            for(Estado estado : estados){
+                writer.println(estado.toString());
+            }
+            writer.println("#initial");
+            writer.println(estadoInicial.toString());
+            writer.println("#accepting");
+            for(Estado estado : estadosDeAceptacion){
+                writer.println(estado.toString());
+            }
+            writer.println("#transitions");
+            for(Estado estado : estados){
+                writer.print(estado.toString()+":");
+                for(char simbolo : alfabeto.getSimbolos()){
+                    writer.println(simbolo+">"+funcionDeTrancision.get(estado).get(simbolo).toString());
+                }
+            }
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+    }
+
     public boolean procesarCadena(String cadena){
         Estado estadoActual = estadoInicial;
         for(int i=0;i<cadena.length();i++){
@@ -628,6 +798,8 @@ public class AFD {
         afd.hallarEstadosLimbo();
         System.out.println("Estados llimbo: "+afd.getEstadosLimbo());
         afd.hallarEstadosInaccesibles();
+        afd.exportar("test");
+        /*
         AFD afd4 = afd.simplificarAFD(afd);
         System.out.println("transiciones nuevo afd: "+ afd4.getFuncionDeTrancision());
         /*System.out.println("Estados inaccesibles: "+afd.getEstadosInaccesibles());
