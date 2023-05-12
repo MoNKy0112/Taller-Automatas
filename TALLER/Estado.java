@@ -18,10 +18,18 @@ public class Estado {
     public Estado(Estado[] estados) {
         this.id = ++cont;
         this.estados = estados;
+        this.inicial = false;
+        this.accesible = true;
+        this.aceptacion = false;
+        this.limbo = false;
     }
 
     public Estado() {
         this.id = ++cont;
+        this.inicial = false;
+        this.accesible = true;
+        this.aceptacion = false;
+        this.limbo = false;
     }
 
     //Getters & Setters
