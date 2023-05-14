@@ -295,7 +295,7 @@ public class AFD {
         setEstadosInaccesibles(inaccesibles);
         return inaccesibles;
     }
-
+    
     //Soporte
     public Estado transicion(Estado estadoOrigen, char simbolo){
         if (!this.alfabeto.contieneSimbolo(simbolo)){
