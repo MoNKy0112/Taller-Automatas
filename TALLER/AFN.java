@@ -138,7 +138,7 @@ public class AFN {
                     funcionDeTrancision.put(estadoOrigen, transiciones);
                     break;
                 }
-                System.out.println(linea);
+                //System.out.println(linea);
             }
               
         }catch(Exception e){
@@ -169,11 +169,11 @@ public class AFN {
         .collect(Collectors.toCollection(ArrayList::new)));
         
         this.funcionDeTrancision = funcionDeTrancision;
-        System.out.println(getAlfabeto());
-        System.out.println(estados);
-        System.out.println(getEstadoInicial());
-        System.out.println(getEstadosDeAceptacion());
-        System.out.println(getFuncionDeTrancision());
+        //System.out.println(getAlfabeto());
+        //System.out.println(estados);
+        //System.out.println(getEstadoInicial());
+        //System.out.println(getEstadosDeAceptacion());
+        //System.out.println(getFuncionDeTrancision());
         //correjirCompletitud
         hallarEstadosInaccesibles();
         hallarEstadosLimbo();
@@ -240,30 +240,31 @@ public class AFN {
     //Soporte B-4
     private boolean dfsLimbo(Estado estadoActual, Set<Estado> visitados, Set<Estado> noMuertos){
         visitados.add(estadoActual);
-        System.out.println("visitados:"+visitados);
+        //System.out.println("visitados:"+visitados);
         for (char simbolo: alfabeto.getSimbolos()) {
             List<Estado> estadosSig = transiciones(estadoActual, simbolo);
-            for(Estado estadoSig : estadosSig){
-                if(estadoSig != null){
-                    //Verifica si esta en noMuertos, de ser asi el estadoActual tambien seria un noMuerto
-                    if (noMuertos.contains(estadoSig)){
-                        noMuertos.add(estadoActual);
-                        return true;
-                    }
-                    //Verifica si esta en visitados pero no en noMuertos, por lo cual seria un estado muerto
-                    if (!visitados.contains(estadoSig)){
-                        //si no esta en ninguno de los dos, hay que recorrer mas y verificar si se llega a
-                        //algun estado de aceptacion
-                        if(dfsLimbo(estadoSig, visitados, noMuertos)){
+            if(estadosSig!=null){
+                for(Estado estadoSig : estadosSig){
+                    if(estadoSig != null){
+                        //Verifica si esta en noMuertos, de ser asi el estadoActual tambien seria un noMuerto
+                        if (noMuertos.contains(estadoSig)){
                             noMuertos.add(estadoActual);
                             return true;
                         }
-                    }                 
-                    //De no ser asi por este camino solo hay estados limbo
-                    //Por lo cual debe revisar los demas caminos
+                        //Verifica si esta en visitados pero no en noMuertos, por lo cual seria un estado muerto
+                        if (!visitados.contains(estadoSig)){
+                            //si no esta en ninguno de los dos, hay que recorrer mas y verificar si se llega a
+                            //algun estado de aceptacion
+                            if(dfsLimbo(estadoSig, visitados, noMuertos)){
+                                noMuertos.add(estadoActual);
+                                return true;
+                            }
+                        }                 
+                        //De no ser asi por este camino solo hay estados limbo
+                        //Por lo cual debe revisar los demas caminos
+                    }
                 }
-            }
-            
+            }            
         }
         //Si ningun camino lo llevo a un estado de aceptacion, se entiende que este es un estado limbo
         return false;
@@ -279,10 +280,12 @@ public class AFN {
             Estado estadoActual = queue.poll();
             for (char simbolo: alfabeto.getSimbolos()) {
                 List<Estado> estadosSig = transiciones(estadoActual, simbolo);
-                for(Estado estadoSig: estadosSig){
-                    if (estadoSig != null && !accesibles.contains(estadoSig)) {
-                        accesibles.add(estadoSig);
-                        queue.offer(estadoSig);
+                if(estadosSig!=null){
+                    for(Estado estadoSig: estadosSig){
+                        if (estadoSig != null && !accesibles.contains(estadoSig)) {
+                            accesibles.add(estadoSig);
+                            queue.offer(estadoSig);
+                        }
                     }
                 }
             }
@@ -372,6 +375,59 @@ public class AFN {
             e.printStackTrace();
         }
         
+    }
+
+    public AFD AFNtoAFD(AFN afn){
+        HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancisionAFD = new HashMap<Estado, HashMap<Character, Estado>>();
+        ArrayList<Estado> nuevosEstados = new ArrayList<>();
+        Queue<Estado> queue = new LinkedList<>();
+        Map<Estado[],Estado> mapEstados = new HashMap<>();
+        queue.addAll(afn.getEstados());
+        
+        while(!queue.isEmpty()){
+            Estado estado = queue.poll();
+            for(char simbolo:afn.getAlfabeto().getSimbolos()){
+                Estado[] estadosSig = null;
+                Estado[] estadosInt = estado.getEstados();
+                if(mapEstados.get(estadosInt)==null){
+                    estadosSig = afn.transiciones(estado, simbolo).toArray(null);
+                }else{
+                    List<Estado> estadosSigL= new ArrayList<>();
+                    for(Estado estad: estadosInt){
+                        estadosSigL.addAll(afn.transiciones(estad, simbolo));
+                    }
+                    estadosSig=estadosSigL.toArray(estadosSig);
+                }
+
+                HashMap<Character,Estado> transicion = funcionDeTrancisionAFD.getOrDefault(estado, new HashMap<>());
+                if(estadosSig!=null){
+                    Estado newEstado = mapEstados.get(estadosSig);
+                    if(estadosSig.length>1 && newEstado==null){
+                        newEstado = new Estado(estadosSig);
+                        mapEstados.put(estadosSig, estado);
+                        for(Estado est : estadosSig){
+                            if(est.isAceptacion()){
+                                newEstado.setAceptacion(true);
+                            }
+                        }
+                    }else if(newEstado==null){
+                        newEstado = estadosSig[0];
+                        mapEstados.put(estadosSig, estado);
+                    }
+                    transicion.put(simbolo, newEstado);
+                    if(!nuevosEstados.contains(newEstado)){
+                        nuevosEstados.add(estado);
+                        queue.offer(newEstado);
+                    }
+                }
+                funcionDeTrancisionAFD.put(estado, transicion);
+            }
+        }
+        
+
+        AFD newAfd = new AFD(alfabeto, nuevosEstados, funcionDeTrancisionAFD);
+        newAfd.setEstadoInicial(afn.estadoInicial);
+        return newAfd;
     }
 
     //Gettesrs y Setters
