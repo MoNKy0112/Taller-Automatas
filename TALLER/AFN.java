@@ -459,6 +459,27 @@ public class AFN {
         return newAfd;
     }
 
+    public boolean procesarCadena(String cadena){
+        Estado estadoActual = estadoInicial;
+        List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+        for (Estado est : estados){
+            if(procesarCadena(est, cadena.substring(1)))return true;
+        }
+        return false;
+    }
+    private boolean procesarCadena(Estado estado,String cadena){
+        Estado estadoActual = estado;
+        if(!cadena.isEmpty()){
+            List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+            for (Estado est : estados){
+                if(procesarCadena(est, cadena.substring(1)))return true;
+            }
+        }else{
+            return estadosDeAceptacion.contains(estadoActual) ? true : false;
+        }
+        return false;
+    }
+
     //Gettesrs y Setters
     // Getters & Setters
     public Alfabeto getAlfabeto() {
