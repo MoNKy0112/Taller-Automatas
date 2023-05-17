@@ -3,8 +3,10 @@ package TALLER;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -156,10 +158,13 @@ public class AFN {
             }
         }
         
-        String st = simbolos.toString();
-        char[] simbolosAlf = st.toCharArray();
+        Character[] sim = simbolos.toArray(new Character[simbolos.size()]);
+        char[] simb = new char[simbolos.size()];
+        for(int i=0;i<sim.length;i++) simb[i]=sim[i];
+        char[] simbolosAlf = simb;
         Alfabeto alfabeto = new Alfabeto(simbolosAlf);
         this.alfabeto = alfabeto;
+        System.out.println();
         this.estados = estados;
         for(Estado estado:estados){
             if(estado.isInicial())this.setEstadoInicial(estado);
@@ -190,9 +195,13 @@ public class AFN {
         if (!contieneEstado(estadoOrigen)){
             throw new IllegalArgumentException("El estado " + estadoOrigen + " no pertenece al conjunto de estados del autómata.");
         }
+        if(!funcionDeTrancision.containsKey(estadoOrigen)){
+            return null;
+        }
         if (!funcionDeTrancision.get(estadoOrigen).containsKey(simbolo)){
             return null;
         }
+        
         return funcionDeTrancision.get(estadoOrigen).get(simbolo);
     }
 
@@ -279,6 +288,7 @@ public class AFN {
         while (!queue.isEmpty()) {
             Estado estadoActual = queue.poll();
             for (char simbolo: alfabeto.getSimbolos()) {
+                System.out.println(estadoActual+"->"+simbolo);
                 List<Estado> estadosSig = transiciones(estadoActual, simbolo);
                 if(estadosSig!=null){
                     for(Estado estadoSig: estadosSig){
@@ -381,30 +391,46 @@ public class AFN {
         HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancisionAFD = new HashMap<Estado, HashMap<Character, Estado>>();
         ArrayList<Estado> nuevosEstados = new ArrayList<>();
         Queue<Estado> queue = new LinkedList<>();
-        Map<Estado[],Estado> mapEstados = new HashMap<>();
+        Map<String,Estado> mapEstados = new HashMap<>();
         queue.addAll(afn.getEstados());
-        
+        nuevosEstados.addAll(queue);
         while(!queue.isEmpty()){
             Estado estado = queue.poll();
+            if(!nuevosEstados.contains(estado))nuevosEstados.add(estado);
             for(char simbolo:afn.getAlfabeto().getSimbolos()){
                 Estado[] estadosSig = null;
                 Estado[] estadosInt = estado.getEstados();
-                if(mapEstados.get(estadosInt)==null){
-                    estadosSig = afn.transiciones(estado, simbolo).toArray(null);
+                try {
+                    System.in.read();
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+                if(estadosInt==null || mapEstados.get(Arrays.toString(estadosInt))==null){
+                    Set<Estado> setEstados = new HashSet<>();
+                    if(afn.transiciones(estado, simbolo)!=null){
+                        setEstados.addAll(afn.transiciones(estado, simbolo));
+                        List<Estado> temp=new ArrayList<>(setEstados);
+                        estadosSig = temp.toArray(new Estado[temp.size()]);
+                    }
                 }else{
+                    Set<Estado> setEstados = new HashSet<>();
                     List<Estado> estadosSigL= new ArrayList<>();
                     for(Estado estad: estadosInt){
-                        estadosSigL.addAll(afn.transiciones(estad, simbolo));
+                        if(afn.transiciones(estad, simbolo)!=null){
+                            setEstados.addAll(afn.transiciones(estad, simbolo));
+                        }
                     }
-                    estadosSig=estadosSigL.toArray(estadosSig);
+                    estadosSigL = new ArrayList<>(setEstados);
+                    estadosSig=estadosSigL.toArray(new Estado[estadosSigL.size()]);
                 }
-
+            
                 HashMap<Character,Estado> transicion = funcionDeTrancisionAFD.getOrDefault(estado, new HashMap<>());
                 if(estadosSig!=null){
-                    Estado newEstado = mapEstados.get(estadosSig);
+                    Estado newEstado = null;
+                    if(estadosSig!=null)newEstado=mapEstados.get(Arrays.toString(estadosSig));
                     if(estadosSig.length>1 && newEstado==null){
                         newEstado = new Estado(estadosSig);
-                        mapEstados.put(estadosSig, estado);
+                        mapEstados.put(Arrays.toString(estadosSig), newEstado);
                         for(Estado est : estadosSig){
                             if(est.isAceptacion()){
                                 newEstado.setAceptacion(true);
@@ -412,19 +438,22 @@ public class AFN {
                         }
                     }else if(newEstado==null){
                         newEstado = estadosSig[0];
-                        mapEstados.put(estadosSig, estado);
+                        mapEstados.put(Arrays.toString(estadosSig), newEstado);
                     }
                     transicion.put(simbolo, newEstado);
+                    System.out.println(simbolo+"="+transicion.get(simbolo));
+                    System.out.println(nuevosEstados);
                     if(!nuevosEstados.contains(newEstado)){
-                        nuevosEstados.add(estado);
                         queue.offer(newEstado);
                     }
                 }
                 funcionDeTrancisionAFD.put(estado, transicion);
+                System.out.println(estado+"====="+funcionDeTrancisionAFD.get(estado));
             }
+            
         }
         
-
+        
         AFD newAfd = new AFD(alfabeto, nuevosEstados, funcionDeTrancisionAFD);
         newAfd.setEstadoInicial(afn.estadoInicial);
         return newAfd;
@@ -499,6 +528,12 @@ public class AFN {
         AFN afn2 = new AFN("testAFN");
         System.out.println("----------------AFN2-----------");
         System.out.println(afn2.getFuncionDeTrancision());
+        AFD afd = afn2.AFNtoAFD(afn2);
+        afd.verificarCorregirCompletitudAFD();
+        afd.hallarEstadosInaccesibles();
+        afd.simplificarAFD(afd);
+        System.out.println(afd.getFuncionDeTrancision());
+        
     }
 
 }

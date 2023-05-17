@@ -166,12 +166,32 @@ public class AFD {
                         estadoLimboNuevo = new Estado();
                         //agregarEstado(estadoLimboNuevo);
                     }
-                    agregarTransicion(estado, simbolo, estadoLimboNuevo);
+                    agregarTransicionLimbo(estado, simbolo, estadoLimboNuevo);
                 }
+            }
+        }
+        if(estadoLimboNuevo != null){
+            agregarEstado(estadoLimboNuevo);
+            for (char simbolo: alfabeto.getSimbolos()){
+                agregarTransicionLimbo(estadoLimboNuevo, simbolo, estadoLimboNuevo);
             }
         }
     }
 
+    private void agregarEstado(Estado estadoLimboNuevo) {
+        this.estados.add(estadoLimboNuevo);
+    }
+    private void agregarTransicionLimbo(Estado estadoOrigen,char simbolo, Estado estadoDestino){
+        if (!this.alfabeto.contieneSimbolo(simbolo)){
+            throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
+        }
+        if (!contieneEstado(estadoOrigen)){
+            throw new IllegalArgumentException("El estado " + estadoOrigen +" no pertenece al conjunto de estados del autómata.");
+        }
+        HashMap<Character, Estado> transiciones = funcionDeTrancision.getOrDefault(estadoOrigen, new HashMap<>());
+        transiciones.put(simbolo, estadoDestino);
+        funcionDeTrancision.put(estadoOrigen, transiciones);
+    }
     //Agrega transicion individual --Soporte
     public void agregarTransicion(Estado estadoOrigen,char simbolo, Estado estadoDestino){
         if (!this.alfabeto.contieneSimbolo(simbolo)){
