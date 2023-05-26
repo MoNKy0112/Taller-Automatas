@@ -2,10 +2,9 @@ package TALLER;
 public class Estado {
     private static int cont = -1;
     private int id;
-    private boolean limbo, accesible, aceptacion, inicial;
+    private boolean limbo, accesible, aceptacion=false, inicial;
     private Estado[] estados;
-
-    
+ 
 
     public Estado(boolean inicial, boolean aceptacion, boolean accesible, boolean limbo) {
         this.id = ++cont;

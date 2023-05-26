@@ -26,7 +26,7 @@ public class MatrixGUI extends JFrame {
     private AFD afd;
     private char[] alphabet;
     private JButton saveButton;
-    private HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancision;
+    private HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion;
 
     public MatrixGUI(AFD afd) {
         super("Matrix");
@@ -38,7 +38,7 @@ public class MatrixGUI extends JFrame {
         states = afd.getEstados().toArray(states);
         this.states = states;
         this.alphabet = afd.getAlfabeto().getSimbolos();
-        this.funcionDeTrancision = afd.getFuncionDeTrancision();
+        this.funcionDeTransicion = afd.getFuncionDeTransicion();
         this.rows = this.states.length;
         this.cols = this.alphabet.length;
         cells = new Cell[rows][cols];
@@ -70,7 +70,7 @@ public class MatrixGUI extends JFrame {
                 int index = states.length;
                 Estado est = null;
                 try {
-                    est = funcionDeTrancision.get(states[i]).get(alphabet[j]);
+                    est = funcionDeTransicion.get(states[i]).get(alphabet[j]);
                 } catch (Exception e) {
                     // TODO: handle exception
                 }
@@ -107,7 +107,7 @@ public class MatrixGUI extends JFrame {
         
         
         for (int i = 0; i < rows; i++) {
-            HashMap<Character, Estado> transiciones = funcionDeTrancision.getOrDefault(states[i], new HashMap<>());
+            HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(states[i], new HashMap<>());
             for (int j = 0; j < cols; j++) {
                 Cell celda = cells[i][j];
                 Estado estadoSeleccionado = celda.getSelectedState();
@@ -122,17 +122,17 @@ public class MatrixGUI extends JFrame {
                     
                 }
             }
-            funcionDeTrancision.put(states[i], transiciones);
+            funcionDeTransicion.put(states[i], transiciones);
         }
-        afd.setFuncionDeTrancision(funcionDeTrancision);
+        afd.setFuncionDeTransicion(funcionDeTransicion);
         
         // Aquí se puede hacer algo con la matriz de celdas guardada, como enviarla a otra clase o guardarla en un archivo.
         // Por ejemplo, se puede imprimir en la consola la matriz de celdas guardada:
         //System.out.println(Arrays.deepToString(matrizCeldas));
         //return matrizCeldas;
         this.dispose();
-        //System.out.println(afd.getFuncionDeTrancision());
-        //System.out.println(funcionDeTrancision);
+        //System.out.println(afd.getFuncionDeTransicion());
+        //System.out.println(funcionDeTransicion);
     }
 
     /*public static void main(String[] args) {
@@ -140,11 +140,11 @@ public class MatrixGUI extends JFrame {
         char[] alphabet = afd.getAlfabeto().getSimbolos();
         Estado[] states = new Estado[afd.getEstados().size()];
         states = afd.getEstados().toArray(states);
-        System.out.println(afd.getFuncionDeTrancision());
+        System.out.println(afd.getFuncionDeTransicion());
         MatrixGUI gui = new MatrixGUI(afd);
         while (gui.isVisible()){
             System.out.println("1");
         }
-        System.out.println("aaa"+afd.getFuncionDeTrancision());
+        System.out.println("aaa"+afd.getFuncionDeTransicion());
     }*/
 }

@@ -15,7 +15,7 @@ public class Alfabeto {
     public String generarCadenaAleatoria(int n) {
         Random rand = new Random();
         StringBuilder sb = new StringBuilder();
-
+        
         for (int i = 0; i < n; i++) {
             int randIndex = rand.nextInt(simbolos.length);
             sb.append(simbolos[randIndex]);

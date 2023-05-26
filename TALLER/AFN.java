@@ -3,6 +3,7 @@ package TALLER;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.DisplayNameGenerator.Simple;
 
 import TALLER.GUITABLA.MatrixGUIAFN;
 
@@ -164,7 +167,7 @@ public class AFN {
         char[] simbolosAlf = simb;
         Alfabeto alfabeto = new Alfabeto(simbolosAlf);
         this.alfabeto = alfabeto;
-        System.out.println();
+        //System.out.println();
         this.estados = estados;
         for(Estado estado:estados){
             if(estado.isInicial())this.setEstadoInicial(estado);
@@ -288,7 +291,7 @@ public class AFN {
         while (!queue.isEmpty()) {
             Estado estadoActual = queue.poll();
             for (char simbolo: alfabeto.getSimbolos()) {
-                System.out.println(estadoActual+"->"+simbolo);
+                //System.out.println(estadoActual+"->"+simbolo);
                 List<Estado> estadosSig = transiciones(estadoActual, simbolo);
                 if(estadosSig!=null){
                     for(Estado estadoSig: estadosSig){
@@ -400,11 +403,11 @@ public class AFN {
             for(char simbolo:afn.getAlfabeto().getSimbolos()){
                 Estado[] estadosSig = null;
                 Estado[] estadosInt = estado.getEstados();
-                try {
-                    System.in.read();
-                } catch (Exception e) {
-                    // TODO: handle exception
-                }
+                // try {
+                //     System.in.read();
+                // } catch (Exception e) {
+                //     // TODO: handle exception
+                // }
                 if(estadosInt==null || mapEstados.get(Arrays.toString(estadosInt))==null){
                     Set<Estado> setEstados = new HashSet<>();
                     if(afn.transiciones(estado, simbolo)!=null){
@@ -441,43 +444,182 @@ public class AFN {
                         mapEstados.put(Arrays.toString(estadosSig), newEstado);
                     }
                     transicion.put(simbolo, newEstado);
-                    System.out.println(simbolo+"="+transicion.get(simbolo));
-                    System.out.println(nuevosEstados);
+                    //System.out.println(simbolo+"="+transicion.get(simbolo));
+                    //System.out.println(nuevosEstados);
                     if(!nuevosEstados.contains(newEstado)){
                         queue.offer(newEstado);
                     }
                 }
                 funcionDeTrancisionAFD.put(estado, transicion);
-                System.out.println(estado+"====="+funcionDeTrancisionAFD.get(estado));
+                //System.out.println(estado+"====="+funcionDeTrancisionAFD.get(estado));
             }
             
         }
         
         
         AFD newAfd = new AFD(alfabeto, nuevosEstados, funcionDeTrancisionAFD);
+        ArrayList<Estado> estadosAcep = new ArrayList<>();
+        for (Estado est:newAfd.getEstados()){
+            if(est.isAceptacion())estadosAcep.add(est);
+        }
+
+        newAfd.setEstadosDeAceptacion(estadosAcep);
         newAfd.setEstadoInicial(afn.estadoInicial);
         return newAfd;
     }
 
     public boolean procesarCadena(String cadena){
         Estado estadoActual = estadoInicial;
-        List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
-        for (Estado est : estados){
-            if(procesarCadena(est, cadena.substring(1)))return true;
-        }
-        return false;
-    }
-    private boolean procesarCadena(Estado estado,String cadena){
-        Estado estadoActual = estado;
-        if(!cadena.isEmpty()){
+        if(cadena.length()!=0){
             List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
             for (Estado est : estados){
                 if(procesarCadena(est, cadena.substring(1)))return true;
+            }
+            return false;
+        }
+        return estadosDeAceptacion.contains(estadoActual);
+    }
+    private boolean procesarCadena(Estado estado,String cadena){
+        Estado estadoActual = estado;
+        //System.out.println(cadena.isEmpty()+"-tam:"+cadena.length());
+        if(!cadena.isEmpty()){
+            //System.out.println(estadoActual+"--"+ cadena.charAt(0)+"="+transiciones(estadoActual, cadena.charAt(0)));
+            List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+            if (estados!=null){
+                for (Estado est : estados){
+                    if(procesarCadena(est, cadena.substring(1)))return true;
+                }
             }
         }else{
             return estadosDeAceptacion.contains(estadoActual) ? true : false;
         }
         return false;
+    }
+
+    public boolean procesarCadenaConDetalles(String cadena){
+        Estado estadoActual = estadoInicial;
+        List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+        List<Estado> listaEstados = new ArrayList<>();
+        for (Estado est : estados){
+            if(procesarCadenaConDetalles(est, cadena.substring(1),listaEstados)){
+                System.out.println(listaEstados);
+                System.out.println(true);
+                return true;
+            }
+        }
+        System.out.println(false);
+        return false;
+    }
+    private boolean procesarCadenaConDetalles(Estado estado,String cadena,List<Estado> listaEstados){
+        Estado estadoActual = estado;
+        //System.out.println(cadena.isEmpty()+"-tam:"+cadena.length());
+        if(!cadena.isEmpty()){
+            //System.out.println(estadoActual+"--"+ cadena.charAt(0)+"="+transiciones(estadoActual, cadena.charAt(0)));
+            List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+            if (estados!=null){
+                for (Estado est : estados){
+                    if(procesarCadenaConDetalles(est, cadena.substring(1),listaEstados)){
+                        listaEstados.add(0, est);
+                        return true;
+                    }
+                }
+            }
+        }else{
+            return estadosDeAceptacion.contains(estadoActual) ? true : false;
+        }
+        return false;
+    }
+
+    public int computarTodosLosProcesamientos(String cadena,String nombreArchivo){
+        Estado estadoActual = estadoInicial;
+        List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+        List<Estado> procAcep = new ArrayList<>();
+        List<Estado> procAbort = new ArrayList<>();
+        List<Estado> procRech = new ArrayList<>();
+        List<Estado> listaEstados = new ArrayList<>();
+        File file = null;
+        for(int i = 0;i<3;i++){
+            if(i==0)file = new File(nombreArchivo+"Abortadas.txt");
+            if(i==1)file = new File(nombreArchivo+"Aceptadas.txt");
+            if(i==2)file = new File(nombreArchivo+"Rechazadas.txt");
+            if (file.exists()) {
+                if (file.delete()) {
+                    System.out.println("Archivo borrado exitosamente.");
+                } else {
+                    System.out.println("No se pudo borrar el archivo.");
+                }
+            } else {
+                System.out.println("El archivo no existe.");
+            }
+        }   
+        int procesos = computarTodosLosProcesamientos(estadoActual, cadena, nombreArchivo,listaEstados);
+        
+        
+        
+        
+        return procesos;
+    }
+
+    private int computarTodosLosProcesamientos(Estado estado,String cadena,String nombreArchivo,
+    List<Estado> listaEstados){
+        int procesosInt=0;
+        Estado estadoActual = estado;
+        List<Estado> listaAct = new ArrayList<>(listaEstados);
+        listaAct.add(estadoActual);
+        //System.out.println(cadena.isEmpty()+"-tam:"+cadena.length());
+        if(!cadena.isEmpty()){
+            // System.out.println(estadoActual+"--"+ cadena.charAt(0)+"="+transiciones(estadoActual, cadena.charAt(0)));
+            List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+            if (estados!=null){
+                for (Estado est : estados){
+                    //System.out.println(est+":"+cadena.substring(1));
+                    procesosInt += computarTodosLosProcesamientos(est, cadena.substring(1), nombreArchivo, listaAct);
+                }
+            }else{
+                System.out.println("abortado"+listaAct);
+                try {
+                    FileWriter writer = new FileWriter(nombreArchivo+"Abortadas.txt", true);
+                    writer.write(listaAct.stream().map(Object::toString).collect(Collectors.joining(","))+"\n");
+                    writer.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                procesosInt +=1;
+            }
+        }else{
+            if (estadosDeAceptacion.contains(estadoActual)) {
+                System.out.println("aceptado"+listaAct);
+                try {
+                    FileWriter writer = new FileWriter(nombreArchivo+"Aceptadas.txt", true);
+                    writer.write(listaAct.stream().map(Object::toString).collect(Collectors.joining(","))+"\n");
+                    writer.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                procesosInt +=1;
+            }else{
+                System.out.println("rechazado:"+listaAct);
+                try {
+                    FileWriter writer = new FileWriter(nombreArchivo+"Rechazadas.txt", true);
+                    writer.write(listaAct.stream().map(Object::toString).collect(Collectors.joining(","))+"\n");
+                    writer.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                procesosInt +=1;
+            }
+        }
+        return procesosInt;
+    }
+
+    public boolean procesarCadenaConversion(String cadena){
+        AFD afd = AFNtoAFD(this);
+        return afd.procesarCadena(cadena);
+    }
+
+    public boolean procesarCadenaConDetallesConversion(String cadena){
+        AFD afd = AFNtoAFD(this);
+        return afd.procesarCadenaConDetalles(cadena);
     }
 
     //Gettesrs y Setters
@@ -547,14 +689,17 @@ public class AFN {
         afn.exportar("testAFN");
         */
         AFN afn2 = new AFN("testAFN");
-        System.out.println("----------------AFN2-----------");
-        System.out.println(afn2.getFuncionDeTrancision());
-        AFD afd = afn2.AFNtoAFD(afn2);
-        afd.verificarCorregirCompletitudAFD();
-        afd.hallarEstadosInaccesibles();
-        afd.simplificarAFD(afd);
-        System.out.println(afd.getFuncionDeTrancision());
-        
+        System.out.println(afn2.procesarCadenaConversion("101"));
+        //System.out.println(afn2.computarTodosLosProcesamientos("001110100101001011011", "afnProcesos"));
+        //System.out.println("----------------AFN2-----------");
+        //System.out.println(afn2.getFuncionDeTrancision());
+        // AFD afd = afn2.AFNtoAFD(afn2);
+        // afd.verificarCorregirCompletitudAFD();
+        // afd.hallarEstadosInaccesibles();
+        // afd.simplificarAFD(afd);
+        // //System.out.println(afd.getFuncionDeTrancision());
+        // System.out.println(afn2.procesarCadenaConDetalles("000001"));
+        // System.out.println(afn2.procesarCadenaConDetalles("00000111"));
     }
 
 }

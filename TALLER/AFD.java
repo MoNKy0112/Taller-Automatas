@@ -2,6 +2,7 @@ package TALLER;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import TALLER.GRAPH.AFDGraphGUI;
 import TALLER.GRAPH.Graph;
 import TALLER.GUITABLA.MatrixGUI;
 import javafx.application.Application;
@@ -29,7 +30,7 @@ public class AFD {
     private ArrayList<Estado> estadosDeAceptacion = new ArrayList<>(
         estados.stream().filter(p -> p.isAceptacion()).collect(Collectors.toList())
     );
-    private HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancision;
+    private HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion;
     private ArrayList<Estado> estadosLimbo = new ArrayList<>(
         estados.stream().filter(p -> p.isLimbo()).collect(Collectors.toList())
     );
@@ -40,19 +41,19 @@ public class AFD {
     ////Metodos
     //Constructor
     //B-1
-    public AFD(Alfabeto alfabeto, ArrayList<Estado> estados, HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancision) {
+    public AFD(Alfabeto alfabeto, ArrayList<Estado> estados, HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion) {
         this.alfabeto = alfabeto;
         this.estados = estados;
-        this.funcionDeTrancision = funcionDeTrancision;
+        this.funcionDeTransicion = funcionDeTransicion;
     }
     //B-1
     public AFD(Alfabeto alfabeto) {
         this.alfabeto = alfabeto;
-        this.funcionDeTrancision = new HashMap<>();
+        this.funcionDeTransicion = new HashMap<>();
     }
     //B-1
     public AFD() {
-        this.funcionDeTrancision = new HashMap<>();
+        this.funcionDeTransicion = new HashMap<>();
     }
     //B-2
     public AFD(String nombreArchivo) {
@@ -61,7 +62,7 @@ public class AFD {
         BufferedReader br = null;
         
         ArrayList<Estado> estados = new ArrayList<>();
-        HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancision = new HashMap<>();
+        HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion = new HashMap<>();
         ArrayList<Character> simbolos = new ArrayList<>();
         Map<String,Estado> mapEstados = new HashMap<>();
         try {
@@ -74,23 +75,30 @@ public class AFD {
             // Lectura del fichero
             String linea;
             int status = -1;
+            boolean flag=false;
             while((linea=br.readLine())!=null){
-                if(linea=="#alphabet"){
+                flag=true;
+                if(linea.equals("#alphabet")){
                     status = 0;
+                    flag=false;
                 }
-                if(linea=="#states"){
+                if(linea.equals("#states")){
                     status = 1;
+                    flag=false;
                 }
-                if(linea=="#initial"){
+                if(linea.equals("#initial")){
                     status = 2;
+                    flag=false;
                 }
-                if(linea=="#accepting"){
+                if(linea.equals("#accepting")){
                     status = 3;
+                    flag=false;
                 }
-                if(linea=="#transitions"){
+                if(linea.equals("#transitions")){
                     status = 4;
+                    flag=false;
                 }
-                while(status==0){
+                while(status==0 && flag){
                     if(linea.length()==1){
                         simbolos.add(linea.toCharArray()[0]);
                     }else if(linea.contains("-")){
@@ -101,33 +109,41 @@ public class AFD {
                             simbolos.add((char)i);
                         }
                     }
+                    break;
                 }
-                while(status==1){
+                while(status==1 && flag){
                     Estado nuevoEstado = new Estado();
-                    mapEstados.put(linea, estadoInicial);
+                    mapEstados.put(linea, nuevoEstado);
                     estados.add(nuevoEstado);
+                    break;
                 }
-                while(status==2){
+                while(status==2 && flag){
                     Estado estado = mapEstados.get(linea);
                     int index = estados.indexOf(estado);
                     estados.get(index).setInicial(true);
+                    this.setEstadoInicial(estado);
+                    break;
                 }
-                while(status==3){
+                while(status==3 && flag){
                     Estado estado = mapEstados.get(linea);
                     int index = estados.indexOf(estado);
                     estados.get(index).setAceptacion(true);
+                    System.out.println(estado+"seted aceptation");
+                    break;
                 }
-                while(status==4){
+                while(status==4 && flag){
                     String[] parts = linea.split(":");
                     Estado estadoOrigen = mapEstados.get(parts[0]);
                     String[] parts2 = parts[1].split(">");
                     char simbolo = parts2[0].toCharArray()[0];
                     Estado estadoDestino = mapEstados.get(parts2[1]);
-                    HashMap<Character, Estado> transiciones = funcionDeTrancision.getOrDefault(estadoOrigen, new HashMap<>());
+                    //System.out.println("estDest"+estadoDestino);
+                    HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
                     transiciones.put(simbolo, estadoDestino);
-                    funcionDeTrancision.put(estadoOrigen, transiciones);
+                    funcionDeTransicion.put(estadoOrigen, transiciones);
+                    break;
                 }
-                System.out.println(linea);
+                //System.out.println(linea+"estado: "+status+flag);
             }
               
         }catch(Exception e){
@@ -145,23 +161,28 @@ public class AFD {
             }
         }
         
-        String st = simbolos.toString();
-        char[] simbolosAlf = st.toCharArray();
+        Character[] sim = simbolos.toArray(new Character[simbolos.size()]);
+        char[] simb = new char[simbolos.size()];
+        for(int i=0;i<sim.length;i++) simb[i]=sim[i];
+        char[] simbolosAlf = simb;
         Alfabeto alfabeto = new Alfabeto(simbolosAlf);
         this.alfabeto = alfabeto;
         this.estados = estados;
-        this.funcionDeTrancision = funcionDeTrancision;
-
+        this.funcionDeTransicion = funcionDeTransicion;
+        //System.out.println(this.getFuncionDeTransicion());
         //correjirCompletitud
+        this.setEstadosDeAceptacion(estados.stream().filter(est -> est.isAceptacion())
+        .collect(Collectors.toCollection(ArrayList::new)));
         hallarEstadosInaccesibles();
         hallarEstadosLimbo();
+        
     }
     //B-3
     public void verificarCorregirCompletitudAFD(){
         Estado estadoLimboNuevo = null;
         for (Estado estado : estados){
             for (char simbolo: alfabeto.getSimbolos()){
-                if (!funcionDeTrancision.get(estado).containsKey(simbolo)){
+                if (!funcionDeTransicion.get(estado).containsKey(simbolo)){
                     if(estadoLimboNuevo == null){
                         estadoLimboNuevo = new Estado();
                         //agregarEstado(estadoLimboNuevo);
@@ -188,9 +209,9 @@ public class AFD {
         if (!contieneEstado(estadoOrigen)){
             throw new IllegalArgumentException("El estado " + estadoOrigen +" no pertenece al conjunto de estados del autómata.");
         }
-        HashMap<Character, Estado> transiciones = funcionDeTrancision.getOrDefault(estadoOrigen, new HashMap<>());
+        HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
         transiciones.put(simbolo, estadoDestino);
-        funcionDeTrancision.put(estadoOrigen, transiciones);
+        funcionDeTransicion.put(estadoOrigen, transiciones);
     }
     //Agrega transicion individual --Soporte
     public void agregarTransicion(Estado estadoOrigen,char simbolo, Estado estadoDestino){
@@ -200,9 +221,9 @@ public class AFD {
         if (!contieneEstado(estadoOrigen) || !contieneEstado(estadoDestino)){
             throw new IllegalArgumentException("El estado " + estadoOrigen + " o el estado " + estadoDestino + " no pertenece al conjunto de estados del autómata.");
         }
-        HashMap<Character, Estado> transiciones = funcionDeTrancision.getOrDefault(estadoOrigen, new HashMap<>());
+        HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
         transiciones.put(simbolo, estadoDestino);
-        funcionDeTrancision.put(estadoOrigen, transiciones);
+        funcionDeTransicion.put(estadoOrigen, transiciones);
     }
 
 
@@ -294,6 +315,7 @@ public class AFD {
 
         while (!queue.isEmpty()) {
             Estado estadoActual = queue.poll();
+            System.out.println(estadoActual);
             for (char simbolo: alfabeto.getSimbolos()) {
                 Estado estadoSig = transicion(estadoActual, simbolo);
                 if (estadoSig != null && !accesibles.contains(estadoSig)) {
@@ -324,10 +346,10 @@ public class AFD {
         if (!contieneEstado(estadoOrigen)){
             throw new IllegalArgumentException("El estado " + estadoOrigen + " no pertenece al conjunto de estados del autómata.");
         }
-        if (!funcionDeTrancision.get(estadoOrigen).containsKey(simbolo)){
+        if (!funcionDeTransicion.get(estadoOrigen).containsKey(simbolo)){
             return null;
         }
-        return funcionDeTrancision.get(estadoOrigen).get(simbolo);
+        return funcionDeTransicion.get(estadoOrigen).get(simbolo);
     }
 
     //B-7
@@ -348,12 +370,25 @@ public class AFD {
                 System.out.println(estado.toString());
             }
             System.out.println("#transitions");
+            System.out.println(this.getFuncionDeTransicion());
             for(Estado estado : estados){
+                System.out.println(funcionDeTransicion.get(estado));
                 for(char simbolo : alfabeto.getSimbolos()){
-                    System.out.println(estado.toString()+":"+simbolo+">"+funcionDeTrancision.get(estado).get(simbolo).toString());
+                    System.out.println(simbolo+":"+funcionDeTransicion.get(estado).get(simbolo));
+                    System.out.println(estado.toString()+":"+simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
                 }
             }
             //TODO
+
+            AFDGraphGUI gui = new AFDGraphGUI(this);
+            while(gui.isVisible()){
+                try {
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+            }
+            System.out.println("11111111111111111");
     }
 
     //B-8
@@ -378,7 +413,7 @@ public class AFD {
             writer.println("#transitions");
             for(Estado estado : estados){
                 for(char simbolo : alfabeto.getSimbolos()){
-                    writer.println(estado.toString()+":"+simbolo+">"+funcionDeTrancision.get(estado).get(simbolo).toString());
+                    writer.println(estado.toString()+":"+simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
                 }
             }
             writer.close();
@@ -410,9 +445,9 @@ public class AFD {
             }
             writer.println("#transitions");
             for(Estado estado : estados){
-                writer.print(estado.toString()+":");
                 for(char simbolo : alfabeto.getSimbolos()){
-                    writer.println(simbolo+">"+funcionDeTrancision.get(estado).get(simbolo).toString());
+                    writer.print(estado.toString()+":");
+                    writer.println(simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
                 }
             }
             writer.close();
@@ -441,6 +476,7 @@ public class AFD {
             estadoActual = transicion(estadoActual, cadena.charAt(i));
             System.out.println("con el caracter "+cadena.charAt(i)+" llega al estado: "+estadoActual);
         }
+        System.out.println(estadosDeAceptacion.contains(estadoActual));
         return estadosDeAceptacion.contains(estadoActual) ? true : false;
         
     }
@@ -450,14 +486,16 @@ public class AFD {
     }
     //B-12
     public AFD hallarComplemento(){
-        AFD afd = new AFD(alfabeto, estados, funcionDeTrancision);
+        AFD afd = new AFD(alfabeto, estados, funcionDeTransicion);
         afd.setEstadoInicial(estadoInicial);
         ArrayList<Estado> aceptacion = new ArrayList<>();
-        for (Estado estado: estados){
+        for (Estado estado: afd.getEstados()){
             if(!getEstadosDeAceptacion().contains(estado)){
-                estado.setAceptacion(true);
+                //estado.setAceptacion(true);
                 aceptacion.add(estado);
-            } 
+            }else{
+                estado.setAceptacion(false);
+            }
         }
         afd.setEstadosDeAceptacion(aceptacion);
         return afd;
@@ -686,7 +724,7 @@ public class AFD {
         }
 
 
-       
+       System.out.println("-----Tabla transiciones----------");
         for(int i=0;i<tablaTransiciones.size();i++){
             for(int j=0;j<sinInaccesibles.getAlfabeto().size()+1;j++){
                 System.out.print(tablaTransiciones.get(i).get(j)[0]+","+tablaTransiciones.get(i).get(j)[1]+"->");
@@ -694,18 +732,20 @@ public class AFD {
             }
             System.out.println(" ");
         }
-
+        System.out.println("---------------------------------");
         for (int i=0;i<estados.length;i++){
             for (int j=0;j<estados.length;j++){
                 if(i!=j && TablaEquivalencia[i][j]==null)TablaEquivalencia[i][j]='E';
             }
         }
+        System.out.println("-----Tabla Equivalencias----------");
         for (int i=0;i<estados.length;i++){
             for (int j=0;j<i;j++){
                 System.out.print(TablaEquivalencia[i][j]);
             }
             System.out.println();
         }
+        System.out.println("---------------------------------");
 
         ArrayList<ArrayList<Estado>> equivalentes = new ArrayList<ArrayList<Estado>>();
         ArrayList<Estado> revisados = new ArrayList<>();
@@ -725,14 +765,14 @@ public class AFD {
                 equivalentes.add(inner);
             } 
         }
-
+        System.out.println("------Estados equivalentes-----------");
         for (ArrayList<Estado> array : equivalentes){
             for (Estado estado : array){
                 System.out.print(estado);
             }
             System.out.println();
         }
-
+        System.out.println("---------------------------------");
         ArrayList<Estado> estadosNuevos = new ArrayList<>();
         Map<Estado, Estado> estadoMap = new HashMap<>();
         for (ArrayList<Estado> array : equivalentes){
@@ -778,7 +818,7 @@ public class AFD {
         nuevosEstados.addAll(afdInput.getEstados());
         ArrayList<Estado> nuevosEstados2= new ArrayList<>();
         nuevosEstados2.addAll(nuevosEstados);
-        HashMap<Estado, HashMap<Character,Estado>> nuevaFuncionTransicion = afdInput.getFuncionDeTrancision();
+        HashMap<Estado, HashMap<Character,Estado>> nuevaFuncionTransicion = afdInput.getFuncionDeTransicion();
         for (Estado estado : nuevosEstados){
             if (!estado.isAccesible()){
                 nuevaFuncionTransicion.remove(estado);
@@ -817,11 +857,11 @@ public class AFD {
         for(Estado estado:estadosDeAceptacion)estado.setAceptacion(true);
         this.estadosDeAceptacion = estadosDeAceptacion;
     }
-    public HashMap<Estado, HashMap<Character, Estado>> getFuncionDeTrancision() {
-        return funcionDeTrancision;
+    public HashMap<Estado, HashMap<Character, Estado>> getFuncionDeTransicion() {
+        return funcionDeTransicion;
     }
-    public void setFuncionDeTrancision(HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancision) {
-        this.funcionDeTrancision = funcionDeTrancision;
+    public void setFuncionDeTransicion(HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion) {
+        this.funcionDeTransicion = funcionDeTransicion;
     }
     public ArrayList<Estado> getEstadosLimbo() {
         return estadosLimbo;
@@ -843,7 +883,7 @@ public class AFD {
     @Override
     public String toString() {
         return "AFD [alfabeto=" + alfabeto + ", estados=" + estados + ", estadoInicial=" + estadoInicial
-                + ", estadosDeAceptacion=" + estadosDeAceptacion + ", funcionDeTrancision=" + funcionDeTrancision
+                + ", estadosDeAceptacion=" + estadosDeAceptacion + ", funcionDeTransicion=" + funcionDeTransicion
                 + ", estadosLimbo=" + estadosLimbo + ", estadosInaccesibles=" + estadosInaccesibles + "]";
     }
 
@@ -865,7 +905,7 @@ public class AFD {
         }*/
         AFD afd = new AFD(alf, estados, funcionDeTransicion);
         afd.fillTransitions();
-        System.out.println("transiciones: "+afd.getFuncionDeTrancision());
+        System.out.println("transiciones: "+afd.getFuncionDeTransicion());
         ArrayList<Estado> estadosAcept = new ArrayList<>();
         estados.get(4).setAceptacion(true);
         estadosAcept.add(estados.get(4));
@@ -878,10 +918,10 @@ public class AFD {
         afd.hallarEstadosLimbo();
         System.out.println("Estados llimbo: "+afd.getEstadosLimbo());
         afd.hallarEstadosInaccesibles();
-        afd.exportar("test");
+        afd.exportar("test2");
         /*
         AFD afd4 = afd.simplificarAFD(afd);
-        System.out.println("transiciones nuevo afd: "+ afd4.getFuncionDeTrancision());
+        System.out.println("transiciones nuevo afd: "+ afd4.getFuncionDeTransicion());
         /*System.out.println("Estados inaccesibles: "+afd.getEstadosInaccesibles());
         System.out.println(afd.procesarCadenaConDetalles("01"));
         System.out.println(afd.procesarCadenaConDetalles("010"));
@@ -894,7 +934,7 @@ public class AFD {
         }  
         AFD afd2 = new AFD(alf, estados2, funcionDeTransicion);
         afd2.fillTransitions();
-        System.out.println("transiciones: "+afd2.getFuncionDeTrancision());
+        System.out.println("transiciones: "+afd2.getFuncionDeTransicion());
         ArrayList<Estado> estadosAcept2 = new ArrayList<>();
         estadosAcept2.add(estados2.get(0));
         //estadosAcept.add(estados.get(8));
@@ -913,7 +953,7 @@ public class AFD {
 
         AFD afd3 = afd.productoCartesianoY(afd, afd2);
         System.out.println(afd3.getEstados()+","+afd3.getEstadoInicial()+","+afd3.getEstadosDeAceptacion());
-        System.out.println(afd3.getFuncionDeTrancision());
+        System.out.println(afd3.getFuncionDeTransicion());
         /*AFD afd2 = afd.hallarComplemento();
         afd2.hallarEstadosLimbo();
         System.out.println("Estados llimbo: "+afd2.getEstadosLimbo());
