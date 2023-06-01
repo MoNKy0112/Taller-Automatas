@@ -1,13 +1,19 @@
 package TALLER;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
+import TALLER.GUITABLA.EstadoInicialGUI;
+import TALLER.GUITABLA.MatrixGUIAFN;
 
 public class AFN_Lambda {
     private Alfabeto alfabeto = new Alfabeto(null);
@@ -18,19 +24,76 @@ public class AFN_Lambda {
     private ArrayList<Estado> estadosDeAceptacion = new ArrayList<>(
         estados.stream().filter(p -> p.isAceptacion()).collect(Collectors.toList())
     );
-    private HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision;
+    private HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion;
     private ArrayList<Estado> estadosLimbo = new ArrayList<>(
         estados.stream().filter(p -> p.isLimbo()).collect(Collectors.toList())
     );
+
+    public AFN_Lambda(Alfabeto alfabeto, ArrayList<Estado> estados, HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion){
+        setAlfabeto(alfabeto);
+        this.estados = estados;
+        this.funcionDeTransicion = funcionDeTransicion;
+    }
+
+    public AFN_Lambda(Alfabeto alf){
+        setAlfabeto(alfabeto);
+        this.funcionDeTransicion = new HashMap<>();
+    }
+
+
+
     private ArrayList<Estado> estadosInaccesibles = new ArrayList<>(
         estados.stream().filter(p -> !p.isAccesible()).collect(Collectors.toList())
     );
     //
     public List<Estado> lambdaClausura(Estado estado){
-        List<Estado> estados = new ArrayList<>();
+        Set<Estado> estados = new HashSet<>();
+        Queue<Estado> queue = new LinkedList<>();
         estados.add(estado);
-        estados.addAll(transiciones(estado, '$'));
-        return estados;
+        queue.offer(estado);
+
+        while(!queue.isEmpty()){
+            Estado est = queue.poll();
+
+            List<Estado> list = transiciones(est, '$');
+
+            for(Estado estList : list){
+                if(!estados.contains(estList)){
+                    estados.add(estList);
+                    queue.offer(estList);
+                }
+            }
+            
+        }
+        List<Estado> estadosList = new ArrayList<>(estados);
+
+        return estadosList;
+    }
+
+    public List<Estado> lambdaClausura(List<Estado> estado){
+        Set<Estado> estados = new HashSet<>();
+        Queue<Estado> queue = new LinkedList<>();
+        for(Estado est:estado){
+            estados.add(est);
+            queue.offer(est);
+        }
+        
+        while(!queue.isEmpty()){
+            Estado est = queue.poll();
+
+            List<Estado> list = transiciones(est, '$');
+
+            for(Estado estList : list){
+                if(!estados.contains(estList)){
+                    estados.add(estList);
+                    queue.offer(estList);
+                }
+            }
+            
+        }
+        List<Estado> estadosList = new ArrayList<>(estados);
+
+        return estadosList;
     }
 
 
@@ -40,21 +103,26 @@ public class AFN_Lambda {
 
     public boolean procesarCadena(String cadena){
         Estado estadoActual = estadoInicial;
-        List<Estado> estados = lambdaClausura(estadoActual);
-        Set<Estado> setEstados = new HashSet<>();
-        for (Estado est : estados){
-            setEstados.addAll(transiciones(est, cadena.charAt(0)));
+        if(!cadena.isEmpty()){
+            List<Estado> estados = lambdaClausura(estadoActual);
+            Set<Estado> setEstados = new HashSet<>();
+            for (Estado est : estados){
+                setEstados.addAll(transiciones(est, cadena.charAt(0)));
+            }
+            estados = new ArrayList<>(setEstados);
+            setEstados = new HashSet<>();
+            for (Estado est : estados){
+                setEstados.addAll(lambdaClausura(est));
+            }
+            estados = new ArrayList<>(setEstados);
+            for (Estado est : estados){
+                if(procesarCadena(est, cadena.substring(1)))return true;
+            }
+            return false;
+        }else{
+            System.out.println("SSSSS");
+            return procesarCadena(estadoActual, cadena);
         }
-        estados = new ArrayList<>(setEstados);
-        setEstados = new HashSet<>();
-        for (Estado est : estados){
-            setEstados.addAll(lambdaClausura(est));
-        }
-        estados = new ArrayList<>(setEstados);
-        for (Estado est : estados){
-            if(procesarCadena(est, cadena.substring(1)))return true;
-        }
-        return false;
     }
     private boolean procesarCadena(Estado estado,String cadena){
         Estado estadoActual = estado;
@@ -79,7 +147,13 @@ public class AFN_Lambda {
                 }
             }
         }else{
-            return estadosDeAceptacion.contains(estadoActual) ? true : false;
+            for(Estado estad : estados){
+                if(estadosDeAceptacion.contains(estad)){
+                    return true;
+                }
+                return false;
+            }
+            
         }
         return false;
     }
@@ -123,6 +197,7 @@ public class AFN_Lambda {
     private boolean contieneEstado(Estado estado){
         return this.estados.contains(estado);
     }
+    
     public List<Estado> transiciones(Estado estadoOrigen, char simbolo){
         if (!this.alfabeto.contieneSimbolo(simbolo)){
             throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
@@ -130,17 +205,38 @@ public class AFN_Lambda {
         if (!contieneEstado(estadoOrigen)){
             throw new IllegalArgumentException("El estado " + estadoOrigen + " no pertenece al conjunto de estados del autómata.");
         }
-        if(!funcionDeTrancision.containsKey(estadoOrigen)){
+        if(!funcionDeTransicion.containsKey(estadoOrigen)){
             return null;
         }
-        if (!funcionDeTrancision.get(estadoOrigen).containsKey(simbolo)){
+        if (!funcionDeTransicion.get(estadoOrigen).containsKey(simbolo)){
             return null;
         }
         
-        return funcionDeTrancision.get(estadoOrigen).get(simbolo);
+        return funcionDeTransicion.get(estadoOrigen).get(simbolo);
     }
 
+    public void setInicialWithGui(){
+        EstadoInicialGUI gui = new EstadoInicialGUI(this);
+        while (gui.isVisible()){
+            try {
+                Thread.sleep(100); // Esperar 100 milisegundos
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Ahora el estado inicial es: "+this.getEstadoInicial());
+    }
 
+    public void fillTransitions(){
+        MatrixGUIAFN gui = new MatrixGUIAFN(this);
+        while (gui.isVisible() ){
+            try {
+                Thread.sleep(100); // Esperar 100 milisegundos
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     // Getters & Setters
     public Alfabeto getAlfabeto() {
@@ -165,7 +261,7 @@ public class AFN_Lambda {
     public void setEstados(ArrayList<Estado> estados) {
 
         // for(Estado est:estados){
-        //     HashMap<Character, List<Estado>> transiciones = funcionDeTrancision.getOrDefault(est, new HashMap<>());
+        //     HashMap<Character, List<Estado>> transiciones = funcionDeTransicion.getOrDefault(est, new HashMap<>());
         //     char simb =  '$';
         //     List<Estado> tr = null;
         //     if(transiciones.containsKey(simb) || !transiciones.get(simb).contains(est)){
@@ -173,7 +269,7 @@ public class AFN_Lambda {
         //         tr.add(est);
         //         transiciones.put(simb,tr);
         //     }
-        //     funcionDeTrancision.put(est, transiciones);
+        //     funcionDeTransicion.put(est, transiciones);
         // }
         
         this.estados = estados;
@@ -193,11 +289,11 @@ public class AFN_Lambda {
         for(Estado estado:estadosDeAceptacion)estado.setAceptacion(true);
         this.estadosDeAceptacion = estadosDeAceptacion;
     }
-    public HashMap<Estado, HashMap<Character, List<Estado>>> getFuncionDeTrancision() {
-        return funcionDeTrancision;
+    public HashMap<Estado, HashMap<Character, List<Estado>>> getFuncionDeTransicion() {
+        return funcionDeTransicion;
     }
-    public void setFuncionDeTrancision(HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision) {
-        this.funcionDeTrancision = funcionDeTrancision;
+    public void setFuncionDeTransicion(HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion) {
+        this.funcionDeTransicion = funcionDeTransicion;
     }
     public ArrayList<Estado> getEstadosLimbo() {
         return estadosLimbo;
