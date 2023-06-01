@@ -6,13 +6,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
-import javax.xml.namespace.QName;
-
-import TALLER.GRAPH.AFDGraphGUI;
-import TALLER.GRAPH.Graph;
-import TALLER.GUITABLA.MatrixGUI;
-import javafx.stage.Stage;
-
 public class Prueba {
     public void porbarAFD(){
         Scanner myObj = new Scanner(System.in);
@@ -51,7 +44,7 @@ public class Prueba {
             System.out.println("Maximo tamaño de cadena: ");
             maxSize=myObj.nextInt();
         } catch (Exception e) {
-            // TODO: handle exception
+            //handle exception
         }
         
 
@@ -105,7 +98,7 @@ public class Prueba {
             System.out.println("Maximo tamaño de cadena: ");
             maxSize=myObj.nextInt();
         } catch (Exception e) {
-            // TODO: handle exception
+            // handle exception
         }
         
 
@@ -123,8 +116,28 @@ public class Prueba {
         afn.exportar("probarAFN");
     }
     public void porbarAFNLambda(){
-
+        char[] simbolos = {'0','1'};
+        Alfabeto alf = new Alfabeto(simbolos);
+        int numEstados = 3;
+        ArrayList<Estado> estados = new ArrayList<Estado>();
+        for (int i = 0; i < numEstados; i++) {
+            estados.add(new Estado());
+        }  
+        
+        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
+        AFN_Lambda afnl = new AFN_Lambda(alf, estados, funcionDeTransicion);
+        afnl.setInicialWithGui();
+        ArrayList<Estado> acept = new ArrayList<>();
+        acept.add(afnl.getEstados().get(2));
+        afnl.setEstadosDeAceptacion(acept);
+        afnl.fillTransitions();
+        System.out.println(afnl.getFuncionDeTransicion());
+        System.out.println(afnl.lambdaClausura(afnl.getEstados().get(0)));
+        System.out.println(afnl.procesarCadena(""));
     }
+
+
+
     public void porbarAFNToAFD() throws Exception{
         Random ran = new Random();
         AFN afn = new AFN("testAFN");
@@ -138,7 +151,7 @@ public class Prueba {
             System.out.println("Cantidad de cadenas: ");
             cantCadenas=System.in.read();
         } catch (Exception e) {
-            // TODO: handle exception
+            //handle exception
         }
         
         Alfabeto alf = afn.getAlfabeto();
@@ -196,6 +209,7 @@ public class Prueba {
         //prueba.porbarAFNToAFD();
         //prueba.probarComplemento();
         //prueba.probarProductoCartesiano();
-        prueba.probarSimplificacion();
+        //prueba.probarSimplificacion();
+        prueba.porbarAFNLambda();
     }
 }

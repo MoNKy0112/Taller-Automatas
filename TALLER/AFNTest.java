@@ -16,9 +16,9 @@ public class AFNTest {
         ArrayList<Estado> estados= new ArrayList<>();
         int cantEstados = 3;
         for(int i=0;i<cantEstados;i++)estados.add(new Estado());
-        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision = new HashMap<>();
+        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
         
-        AFN afn = new AFN(alf,estados,funcionDeTrancision);
+        AFN afn = new AFN(alf,estados,funcionDeTransicion);
         return afn;
     }
 
@@ -26,7 +26,7 @@ public class AFNTest {
     void testFillTransitions() {
         AFN afn = testAFN();
         afn.fillTransitions();
-        System.out.println(afn.getFuncionDeTrancision());
+        System.out.println(afn.getFuncionDeTransicion());
     }
 
     @Test
@@ -56,7 +56,7 @@ public class AFNTest {
         ArrayList<Estado> estadosAcep = new ArrayList<>();
         estadosAcep.add(afn.getEstados().get(2));
         afn.setEstadosDeAceptacion(estadosAcep);
-        System.out.println(afn.getFuncionDeTrancision());
+        System.out.println(afn.getFuncionDeTransicion());
         afn.exportar("testAFN");
     }
 

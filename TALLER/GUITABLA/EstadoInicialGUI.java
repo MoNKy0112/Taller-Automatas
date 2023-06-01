@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 
 import TALLER.AFD;
 import TALLER.AFN;
+import TALLER.AFN_Lambda;
 import TALLER.Alfabeto;
 import TALLER.Estado;
 
@@ -24,10 +25,15 @@ public class EstadoInicialGUI extends JFrame implements ActionListener {
     private JComboBox<Estado> estadoInicialBox;
     private JButton seleccionarButton;
     private List<Estado> estados;
+    private AFD afd=null;
+    private AFN afn=null;
+    private AFN_Lambda afnl=null;
+
 
     public EstadoInicialGUI(AFD afd) {
         
         super("Seleccionar estado inicial");
+        this.afd=afd;
         List<Estado> estados = afd.getEstados();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(300, 150);
@@ -56,7 +62,37 @@ public class EstadoInicialGUI extends JFrame implements ActionListener {
     public EstadoInicialGUI(AFN afn) {
         
         super("Seleccionar estado inicial");
+        this.afn=afn;
         List<Estado> estados = afn.getEstados();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(300, 150);
+
+        this.estados = estados;
+
+        JPanel panel = new JPanel();
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setLayout(new BorderLayout());
+
+        JLabel label = new JLabel("Seleccione el estado inicial:");
+        panel.add(label, BorderLayout.NORTH);
+
+        estadoInicialBox = new JComboBox<Estado>(estados.toArray(new Estado[estados.size()]));
+        estadoInicialBox.setPreferredSize(new Dimension(150, 30));
+        panel.add(estadoInicialBox, BorderLayout.CENTER);
+
+        seleccionarButton = new JButton("Seleccionar");
+        seleccionarButton.addActionListener(this);
+        panel.add(seleccionarButton, BorderLayout.SOUTH);
+
+        add(panel);
+        setVisible(true);
+    }
+
+    public EstadoInicialGUI(AFN_Lambda afnl) {
+        
+        super("Seleccionar estado inicial");
+        this.afnl=afnl;
+        List<Estado> estados = afnl.getEstados();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(300, 150);
 
@@ -84,9 +120,21 @@ public class EstadoInicialGUI extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == seleccionarButton) {
             Estado estadoInicial = (Estado) estadoInicialBox.getSelectedItem();
+
+            if(afd!=null){
+                afd.setEstadoInicial(estadoInicial);
+            }
+            if(afn!=null){
+                afn.setEstadoInicial(estadoInicial);
+            }
+            if(afnl!=null){
+                afnl.setEstadoInicial(estadoInicial);
+            }
             dispose(); // cierra la ventana
             // Aquí podrías retornar el estado seleccionado a otra parte del programa
-            System.out.println("El estado seleccionado es: " + estadoInicial.toString());
+            
+
+            //System.out.println("El estado seleccionado es: " + estadoInicial.toString());
         }
     }
 
@@ -112,9 +160,9 @@ public class EstadoInicialGUI extends JFrame implements ActionListener {
         funcionDeTransicion.get(q2).put('a', Arrays.asList(q1));
         funcionDeTransicion.get(q2).put('b', Arrays.asList(q0));
 
-        AFN afn = new AFN(alf,estados,funcionDeTransicion);
+        AFN_Lambda afn = new AFN_Lambda(alf,estados,funcionDeTransicion);
 
-        afn.setFuncionDeTrancision(funcionDeTransicion);
+        afn.setFuncionDeTransicion(funcionDeTransicion);
 
         EstadoInicialGUI gui = new EstadoInicialGUI(afn);
         while (gui.isVisible()){
@@ -136,5 +184,6 @@ public class EstadoInicialGUI extends JFrame implements ActionListener {
                 e.printStackTrace();
             }
         }
+        System.out.println(afd.getEstadoInicial());
     }
 }

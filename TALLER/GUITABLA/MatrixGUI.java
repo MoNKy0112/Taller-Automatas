@@ -72,7 +72,7 @@ public class MatrixGUI extends JFrame {
                 try {
                     est = funcionDeTransicion.get(states[i]).get(alphabet[j]);
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    //handle exception
                 }
                 
                 if (est!=null){

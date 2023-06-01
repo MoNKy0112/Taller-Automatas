@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,8 +15,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.DisplayNameGenerator.Simple;
 
 import TALLER.GUITABLA.MatrixGUIAFN;
 
@@ -31,7 +28,7 @@ public class AFN {
     private ArrayList<Estado> estadosDeAceptacion = new ArrayList<>(
         estados.stream().filter(p -> p.isAceptacion()).collect(Collectors.toList())
     );
-    private HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision;
+    private HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion;
     private ArrayList<Estado> estadosLimbo = new ArrayList<>(
         estados.stream().filter(p -> p.isLimbo()).collect(Collectors.toList())
     );
@@ -42,19 +39,19 @@ public class AFN {
 
     //Metodos
     //B-1
-    public AFN(Alfabeto alfabeto, ArrayList<Estado> estados, HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision) {
+    public AFN(Alfabeto alfabeto, ArrayList<Estado> estados, HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion) {
         this.alfabeto = alfabeto;
         this.estados = estados;
-        this.funcionDeTrancision = funcionDeTrancision;
+        this.funcionDeTransicion = funcionDeTransicion;
     }
     //B-1
     public AFN(Alfabeto alfabeto) {
         this.alfabeto = alfabeto;
-        this.funcionDeTrancision = new HashMap<>();
+        this.funcionDeTransicion = new HashMap<>();
     }
     //B-1
     public AFN() {
-        this.funcionDeTrancision = new HashMap<>();
+        this.funcionDeTransicion = new HashMap<>();
     }
     public AFN(String nombreArchivo) {
         File archivo = null;
@@ -62,7 +59,7 @@ public class AFN {
         BufferedReader br = null;
         
         ArrayList<Estado> estados = new ArrayList<>();
-        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision = new HashMap<>();
+        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
         ArrayList<Character> simbolos = new ArrayList<>();
         Map<String,Estado> mapEstados = new HashMap<>();
         try {
@@ -138,9 +135,9 @@ public class AFN {
                     String[] parts3 = parts2[1].split(";");
                     List<Estado> ests = new ArrayList<>();
                     for(String st : parts3)ests.add(mapEstados.get(st));
-                    HashMap<Character, List<Estado>> transiciones = funcionDeTrancision.getOrDefault(estadoOrigen, new HashMap<>());
+                    HashMap<Character, List<Estado>> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
                     transiciones.put(simbolo, ests);
-                    funcionDeTrancision.put(estadoOrigen, transiciones);
+                    funcionDeTransicion.put(estadoOrigen, transiciones);
                     break;
                 }
                 //System.out.println(linea);
@@ -176,12 +173,12 @@ public class AFN {
         this.setEstadosDeAceptacion(estados.stream().filter(est -> est.isAceptacion())
         .collect(Collectors.toCollection(ArrayList::new)));
         
-        this.funcionDeTrancision = funcionDeTrancision;
+        this.funcionDeTransicion = funcionDeTransicion;
         //System.out.println(getAlfabeto());
         //System.out.println(estados);
         //System.out.println(getEstadoInicial());
         //System.out.println(getEstadosDeAceptacion());
-        //System.out.println(getFuncionDeTrancision());
+        //System.out.println(getFuncionDeTransicion());
         //correjirCompletitud
         hallarEstadosInaccesibles();
         hallarEstadosLimbo();
@@ -198,14 +195,14 @@ public class AFN {
         if (!contieneEstado(estadoOrigen)){
             throw new IllegalArgumentException("El estado " + estadoOrigen + " no pertenece al conjunto de estados del autómata.");
         }
-        if(!funcionDeTrancision.containsKey(estadoOrigen)){
+        if(!funcionDeTransicion.containsKey(estadoOrigen)){
             return null;
         }
-        if (!funcionDeTrancision.get(estadoOrigen).containsKey(simbolo)){
+        if (!funcionDeTransicion.get(estadoOrigen).containsKey(simbolo)){
             return null;
         }
         
-        return funcionDeTrancision.get(estadoOrigen).get(simbolo);
+        return funcionDeTransicion.get(estadoOrigen).get(simbolo);
     }
 
     public void fillTransitions(){
@@ -339,10 +336,10 @@ public class AFN {
             System.out.println("tramsitions");
             for(Estado estado : estados){
                 for(char simbolo : alfabeto.getSimbolos()){
-                    if(!funcionDeTrancision.get(estado).get(simbolo).contains(null)){
+                    if(!funcionDeTransicion.get(estado).get(simbolo).contains(null)){
                         writer.print(estado.toString()+":"+simbolo+">");
-                        List<Estado> estadosDest = funcionDeTrancision.get(estado).get(simbolo);
-                        System.out.println(funcionDeTrancision.get(estado).get(simbolo));
+                        List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
+                        System.out.println(funcionDeTransicion.get(estado).get(simbolo));
                         for(int i=0;i<estadosDest.size()-1;i++) writer.print(estadosDest.get(i)+";");
                         writer.print(estadosDest.get(estadosDest.size()-1));
                         writer.print("\n");
@@ -380,7 +377,7 @@ public class AFN {
             for(Estado estado : estados){
                 writer.print(estado.toString()+":");
                 for(char simbolo : alfabeto.getSimbolos()){
-                    writer.println(simbolo+">"+funcionDeTrancision.get(estado).get(simbolo).toString());
+                    writer.println(simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
                 }
             }
             writer.close();
@@ -391,7 +388,7 @@ public class AFN {
     }
 
     public AFD AFNtoAFD(AFN afn){
-        HashMap<Estado, HashMap<Character, Estado>> funcionDeTrancisionAFD = new HashMap<Estado, HashMap<Character, Estado>>();
+        HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicionAFD = new HashMap<Estado, HashMap<Character, Estado>>();
         ArrayList<Estado> nuevosEstados = new ArrayList<>();
         Queue<Estado> queue = new LinkedList<>();
         Map<String,Estado> mapEstados = new HashMap<>();
@@ -406,7 +403,7 @@ public class AFN {
                 // try {
                 //     System.in.read();
                 // } catch (Exception e) {
-                //     // TODO: handle exception
+                //     //handle exception
                 // }
                 if(estadosInt==null || mapEstados.get(Arrays.toString(estadosInt))==null){
                     Set<Estado> setEstados = new HashSet<>();
@@ -427,7 +424,7 @@ public class AFN {
                     estadosSig=estadosSigL.toArray(new Estado[estadosSigL.size()]);
                 }
             
-                HashMap<Character,Estado> transicion = funcionDeTrancisionAFD.getOrDefault(estado, new HashMap<>());
+                HashMap<Character,Estado> transicion = funcionDeTransicionAFD.getOrDefault(estado, new HashMap<>());
                 if(estadosSig!=null){
                     Estado newEstado = null;
                     if(estadosSig!=null)newEstado=mapEstados.get(Arrays.toString(estadosSig));
@@ -450,14 +447,14 @@ public class AFN {
                         queue.offer(newEstado);
                     }
                 }
-                funcionDeTrancisionAFD.put(estado, transicion);
-                //System.out.println(estado+"====="+funcionDeTrancisionAFD.get(estado));
+                funcionDeTransicionAFD.put(estado, transicion);
+                //System.out.println(estado+"====="+funcionDeTransicionAFD.get(estado));
             }
             
         }
         
         
-        AFD newAfd = new AFD(alfabeto, nuevosEstados, funcionDeTrancisionAFD);
+        AFD newAfd = new AFD(alfabeto, nuevosEstados, funcionDeTransicionAFD);
         ArrayList<Estado> estadosAcep = new ArrayList<>();
         for (Estado est:newAfd.getEstados()){
             if(est.isAceptacion())estadosAcep.add(est);
@@ -612,6 +609,10 @@ public class AFN {
         return procesosInt;
     }
 
+    public void ProcesarListaCadenas(ArrayList<String> listaCadenas, String nombreArchivo, boolean imprimirPantalla){
+        //TODO similar al anterior
+    }
+
     public boolean procesarCadenaConversion(String cadena){
         AFD afd = AFNtoAFD(this);
         return afd.procesarCadena(cadena);
@@ -650,11 +651,11 @@ public class AFN {
         for(Estado estado:estadosDeAceptacion)estado.setAceptacion(true);
         this.estadosDeAceptacion = estadosDeAceptacion;
     }
-    public HashMap<Estado, HashMap<Character, List<Estado>>> getFuncionDeTrancision() {
-        return funcionDeTrancision;
+    public HashMap<Estado, HashMap<Character, List<Estado>>> getFuncionDeTransicion() {
+        return funcionDeTransicion;
     }
-    public void setFuncionDeTrancision(HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision) {
-        this.funcionDeTrancision = funcionDeTrancision;
+    public void setFuncionDeTransicion(HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion) {
+        this.funcionDeTransicion = funcionDeTransicion;
     }
     public ArrayList<Estado> getEstadosLimbo() {
         return estadosLimbo;
@@ -677,27 +678,27 @@ public class AFN {
         ArrayList<Estado> estados= new ArrayList<>();
         int cantEstados = 3;
         for(int i=0;i<cantEstados;i++)estados.add(new Estado());
-        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision = new HashMap<>();
+        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
         
-        AFN afn = new AFN(alf,estados,funcionDeTrancision);
+        AFN afn = new AFN(alf,estados,funcionDeTransicion);
         afn.fillTransitions();
         afn.setEstadoInicial(afn.getEstados().get(0));
         ArrayList<Estado> estadosAcep = new ArrayList<>();
         estadosAcep.add(afn.getEstados().get(2));
         afn.setEstadosDeAceptacion(estadosAcep);
-        System.out.println(afn.getFuncionDeTrancision());
+        System.out.println(afn.getFuncionDeTransicion());
         afn.exportar("testAFN");
         */
         AFN afn2 = new AFN("testAFN");
         System.out.println(afn2.procesarCadenaConversion("101"));
         //System.out.println(afn2.computarTodosLosProcesamientos("001110100101001011011", "afnProcesos"));
         //System.out.println("----------------AFN2-----------");
-        //System.out.println(afn2.getFuncionDeTrancision());
+        //System.out.println(afn2.getFuncionDeTransicion());
         // AFD afd = afn2.AFNtoAFD(afn2);
         // afd.verificarCorregirCompletitudAFD();
         // afd.hallarEstadosInaccesibles();
         // afd.simplificarAFD(afd);
-        // //System.out.println(afd.getFuncionDeTrancision());
+        // //System.out.println(afd.getFuncionDeTransicion());
         // System.out.println(afn2.procesarCadenaConDetalles("000001"));
         // System.out.println(afn2.procesarCadenaConDetalles("00000111"));
     }

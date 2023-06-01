@@ -3,11 +3,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import TALLER.GRAPH.AFDGraphGUI;
-import TALLER.GRAPH.Graph;
 import TALLER.GUITABLA.MatrixGUI;
-import javafx.application.Application;
-import javafx.scene.Group;
-import javafx.stage.Stage;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -378,14 +374,13 @@ public class AFD {
                     System.out.println(estado.toString()+":"+simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
                 }
             }
-            //TODO
 
             AFDGraphGUI gui = new AFDGraphGUI(this);
             while(gui.isVisible()){
                 try {
                     Thread.sleep(100);
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    // handle exception
                 }
             }
             System.out.println("11111111111111111");

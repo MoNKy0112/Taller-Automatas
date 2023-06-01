@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import TALLER.AFN;
+import TALLER.AFN_Lambda;
 import TALLER.Alfabeto;
 import TALLER.Estado;
 
@@ -25,9 +26,10 @@ public class MatrixGUIAFN extends JFrame {
     private Estado[] states;
     private CellAFN[][] cells;
     private AFN afn;
+    private AFN_Lambda afnl;
     private char[] alphabet;
     private JButton saveButton;
-    private HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTrancision;
+    private HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion;
 
     public MatrixGUIAFN(AFN afn) {
         super("Matrix");
@@ -39,7 +41,7 @@ public class MatrixGUIAFN extends JFrame {
         states = afn.getEstados().toArray(states);
         this.states = states;
         this.alphabet = afn.getAlfabeto().getSimbolos();
-        this.funcionDeTrancision = afn.getFuncionDeTrancision();
+        this.funcionDeTransicion = afn.getFuncionDeTransicion();
         this.rows = this.states.length;
         this.cols = this.alphabet.length;
         cells = new CellAFN[rows][cols];
@@ -69,15 +71,91 @@ public class MatrixGUIAFN extends JFrame {
             for (int j = 0; j < cols; j++) {
                 cells[i][j] = new CellAFN(states);
 
-                List<Estado> transiciones = funcionDeTrancision.getOrDefault(states[i],new HashMap<>()).getOrDefault(alphabet[j], new ArrayList<>());
+                List<Estado> transiciones = funcionDeTransicion.getOrDefault(states[i],new HashMap<>()).getOrDefault(alphabet[j], new ArrayList<>());
                 Estado[] estadosTransiciones = new Estado[transiciones.size()];
                 estadosTransiciones = transiciones.toArray(estadosTransiciones);
                 //cell.setTransitions(estadosTransiciones);
                 List<Estado> est = null;
                 try {
-                    est = funcionDeTrancision.get(states[i]).get(alphabet[j]);
+                    est = funcionDeTransicion.get(states[i]).get(alphabet[j]);
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    //handle exception
+                }
+
+                List<Integer> index = new ArrayList<>();                    
+                
+                if (est!=null){
+                    for(Estado estad : est){
+                        index.add(Arrays.asList(states).indexOf(estad));
+                    }
+                }
+                cells[i][j].setSelect(index);
+
+                //cells[i][j] = cell;
+                matrixPanel.add(cells[i][j].getStateList());
+            }
+        }
+        add(matrixPanel, BorderLayout.CENTER);
+
+        saveButton = new JButton("Guardar");
+        saveButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                guardarMatriz();
+            }
+        });
+        add(saveButton, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    public MatrixGUIAFN(AFN_Lambda afnl) {
+        super("Matrix");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(400, 400);
+
+        this.afnl = afnl;
+        Estado[] states = new Estado[afnl.getEstados().size()];
+        states = afnl.getEstados().toArray(states);
+        this.states = states;
+        this.alphabet = afnl.getAlfabeto().getSimbolos();
+        this.funcionDeTransicion = afnl.getFuncionDeTransicion();
+        this.rows = this.states.length;
+        this.cols = this.alphabet.length;
+        cells = new CellAFN[rows][cols];
+
+        matrixPanel = new JPanel();
+        matrixPanel.setLayout(new GridLayout(rows, cols));
+
+        // Agregar etiquetas con caracteres del alfabeto a la parte superior de la matriz
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout(1, cols));
+        for (int i = 0; i < cols; i++) {
+            JLabel label = new JLabel(Character.toString(alphabet[i]), JLabel.CENTER);
+            topPanel.add(label);
+        }
+        add(topPanel, BorderLayout.NORTH);
+
+        // Agregar lista de estados a la izquierda de la matriz
+        leftPanel = new JPanel();
+        leftPanel.setLayout(new GridLayout(rows, 1));
+        for (int i = 0; i < rows; i++) {
+            JLabel label = new JLabel(states[i].toString(), JLabel.CENTER);
+            leftPanel.add(label);
+        }
+        add(leftPanel, BorderLayout.WEST);
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cells[i][j] = new CellAFN(states);
+                List<Estado> transiciones = funcionDeTransicion.getOrDefault(states[i],new HashMap<>()).getOrDefault(alphabet[j], new ArrayList<>());
+                Estado[] estadosTransiciones = new Estado[transiciones.size()];
+                estadosTransiciones = transiciones.toArray(estadosTransiciones);
+                //cell.setTransitions(estadosTransiciones);
+                List<Estado> est = null;
+                try {
+                    est = funcionDeTransicion.get(states[i]).get(alphabet[j]);
+                } catch (Exception e) {
+                    //handle exception
                 }
 
                 List<Integer> index = new ArrayList<>();                    
@@ -108,7 +186,7 @@ public class MatrixGUIAFN extends JFrame {
 
     private void guardarMatriz() {
         for (int i = 0; i < rows; i++) {
-            HashMap<Character, List<Estado>> transiciones = funcionDeTrancision.getOrDefault(states[i], new HashMap<>());
+            HashMap<Character, List<Estado>> transiciones = funcionDeTransicion.getOrDefault(states[i], new HashMap<>());
             for (int j = 0; j < cols; j++) {
                 
                 List<Estado> estados = cells[i][j].getSelectedStates();
@@ -121,9 +199,15 @@ public class MatrixGUIAFN extends JFrame {
                     transiciones.put(alphabet[j], estados);
                 }
             }
-            funcionDeTrancision.put(states[i], transiciones);
+            funcionDeTransicion.put(states[i], transiciones);
         }
-        afn.setFuncionDeTrancision(funcionDeTrancision);
+        if(afn!=null){
+            afn.setFuncionDeTransicion(funcionDeTransicion);
+        }
+        if(afnl!=null){
+            afnl.setFuncionDeTransicion(funcionDeTransicion);
+        }
+        
         this.dispose();
     }
 
@@ -151,7 +235,7 @@ public class MatrixGUIAFN extends JFrame {
 
         AFN afn = new AFN(alf,estados,funcionDeTransicion);
 
-        afn.setFuncionDeTrancision(funcionDeTransicion);
+        afn.setFuncionDeTransicion(funcionDeTransicion);
 
         MatrixGUIAFN gui = new MatrixGUIAFN(afn);
         while (gui.isVisible()){
@@ -161,6 +245,6 @@ public class MatrixGUIAFN extends JFrame {
                 e.printStackTrace();
             }
         }
-        System.out.println(afn.getFuncionDeTrancision());
+        System.out.println(afn.getFuncionDeTransicion());
     }
 }
