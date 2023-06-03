@@ -158,6 +158,40 @@ public class AFN_Lambda {
         return false;
     }
 
+    public AFN AFN_LambdaToAFN(AFN_Lambda afnl){
+
+        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
+
+        List<List<Estado>> listaLambdaClausura = new ArrayList<>();
+        Alfabeto alf = afnl.getAlfabeto();
+        ArrayList<Estado> estadosIn = afnl.getEstados();
+
+        for(Estado est:estadosIn){
+            listaLambdaClausura.add(afnl.lambdaClausura(est));
+        }
+
+        for(Estado est:estadosIn){
+            List<Estado> lEst = afnl.lambdaClausura(est);
+            HashMap<Character, List<Estado>> transiciones = funcionDeTransicion.getOrDefault(est, new HashMap<>());
+            for(char simbolo:alf.getSimbolos()){
+                if(simbolo!='$'){
+                    Set<Estado> setTr = new HashSet<>();
+                    for(Estado estLamb:lEst){
+                        setTr.addAll(transiciones(estLamb, simbolo));
+                    }
+                    List<Estado> listTr = new ArrayList<>(setTr);
+                    transiciones.put(simbolo,afnl.lambdaClausura(listTr));
+                }
+            }
+            funcionDeTransicion.put(est,transiciones);
+        }
+
+        AFN afn = new AFN(alf,estadosIn,funcionDeTransicion);
+        afn.setEstadoInicial(afnl.getEstadoInicial());
+        
+        return afn;
+    }
+
     public ArrayList<Estado> hallarEstadosInaccesibles(){
         Set<Estado> accesibles = new HashSet<>();
         Queue<Estado> queue = new LinkedList<>();

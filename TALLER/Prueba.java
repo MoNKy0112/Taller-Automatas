@@ -132,7 +132,9 @@ public class Prueba {
         afnl.setEstadosDeAceptacion(acept);
         afnl.fillTransitions();
         System.out.println(afnl.getFuncionDeTransicion());
-        System.out.println(afnl.lambdaClausura(afnl.getEstados().get(0)));
+        List<Estado> listaEstados = new ArrayList<>();
+        listaEstados.add(afnl.getEstados().get(0));listaEstados.add(afnl.getEstados().get(1));
+        System.out.println(afnl.lambdaClausura(listaEstados));
         System.out.println(afnl.procesarCadena(""));
     }
 
@@ -163,7 +165,24 @@ public class Prueba {
         
     }
     public void porbarAFNLambdaToAFN(){
-
+        char[] simbolos = {'a','b'};
+        Alfabeto alf = new Alfabeto(simbolos);
+        int numEstados = 4;
+        ArrayList<Estado> estados = new ArrayList<Estado>();
+        for (int i = 0; i < numEstados; i++) {
+            estados.add(new Estado());
+        }  
+        
+        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
+        AFN_Lambda afnl = new AFN_Lambda(alf, estados, funcionDeTransicion);
+        afnl.setInicialWithGui();
+        ArrayList<Estado> acept = new ArrayList<>();
+        acept.add(afnl.getEstados().get(3));
+        afnl.setEstadosDeAceptacion(acept);
+        afnl.fillTransitions();
+        System.out.println(afnl.getFuncionDeTransicion());
+        AFN afn = afnl.AFN_LambdaToAFN(afnl);
+        System.out.println(afn.getFuncionDeTransicion());
     }
     public void probarComplemento(){
         AFD afd = new AFD("test");
@@ -210,6 +229,7 @@ public class Prueba {
         //prueba.probarComplemento();
         //prueba.probarProductoCartesiano();
         //prueba.probarSimplificacion();
-        prueba.porbarAFNLambda();
+        //prueba.porbarAFNLambda();
+        prueba.porbarAFNLambdaToAFN();
     }
 }
