@@ -184,6 +184,44 @@ public class AFN {
         hallarEstadosLimbo();
     }
 
+    /*
+    public void imprimirAFDSimplificado(){
+        System.out.println("#!dfa");
+        System.out.println("#alphabet");
+            for(char simbolo : alfabeto.getSimbolos()){
+                System.out.println(simbolo);
+            }
+            System.out.println("#states");
+            for(Estado estado : estados){
+                System.out.println(estado.toString());
+            }
+            System.out.println("#initial");
+            System.out.println(estadoInicial.toString());
+            System.out.println("#accepting");
+            for(Estado estado : estadosDeAceptacion){
+                System.out.println(estado.toString());
+            }
+            System.out.println("#transitions");
+            System.out.println(this.getFuncionDeTransicion());
+            for(Estado estado : estados){
+                System.out.println(funcionDeTransicion.get(estado));
+                for(char simbolo : alfabeto.getSimbolos()){
+                    System.out.println(simbolo+":"+funcionDeTransicion.get(estado).get(simbolo));
+                    System.out.println(estado.toString()+":"+simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
+                }
+            }
+
+            AFDGraphGUI gui = new AFDGraphGUI(this);
+            while(gui.isVisible()){
+                try {
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    // handle exception
+                }
+            }
+            System.out.println("11111111111111111");
+    }*/
+
     private boolean contieneEstado(Estado estado){
         return this.estados.contains(estado);
     }
@@ -610,7 +648,7 @@ public class AFN {
     }
 
     public void ProcesarListaCadenas(ArrayList<String> listaCadenas, String nombreArchivo, boolean imprimirPantalla){
-        //TODO similar al anterior
+        
     }
 
     public boolean procesarCadenaConversion(String cadena){
@@ -621,6 +659,11 @@ public class AFN {
     public boolean procesarCadenaConDetallesConversion(String cadena){
         AFD afd = AFNtoAFD(this);
         return afd.procesarCadenaConDetalles(cadena);
+    }
+
+    public void procesarListaCadenasConDetallesConversion(String[] cadenas,String nombreArchivo, boolean imprimirPantalla){
+        AFD afd = AFNtoAFD(this);
+        afd.procesarListaCadenas(cadenas, nombreArchivo, imprimirPantalla);
     }
 
     //Gettesrs y Setters

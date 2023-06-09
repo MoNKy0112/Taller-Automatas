@@ -383,7 +383,6 @@ public class AFD {
                     // handle exception
                 }
             }
-            System.out.println("11111111111111111");
     }
 
     //B-8
@@ -477,7 +476,28 @@ public class AFD {
     }
     //B-11
     public void procesarListaCadenas(String[] cadenas,String nombreArchivo, boolean imprimirPantalla){
-        //TODO 
+        if(nombreArchivo==null){
+            nombreArchivo="defaultProcesarListaCadenasAFD";
+        }
+        Estado estadoActual = estadoInicial;
+        try {
+            PrintWriter writer = new PrintWriter(nombreArchivo+".txt", "UTF-8");
+            for(String cadena : cadenas){
+                estadoActual = estadoInicial;
+                writer.print(cadena+"\t");
+                if(imprimirPantalla)System.out.print(cadena+"\t");
+                for(int i=0;i<cadena.length();i++){
+                    writer.print("("+estadoActual+","+cadena.charAt(i)+") -> ");
+                    estadoActual = transicion(estadoActual, cadena.charAt(i));
+                    if(imprimirPantalla)System.out.print("("+estadoActual+","+cadena.charAt(i)+") -> ");
+                }
+                writer.println("("+estadoActual+")\t"+estadosDeAceptacion.contains(estadoActual));
+                if(imprimirPantalla)System.out.println("("+estadoActual+")\t"+estadosDeAceptacion.contains(estadoActual));
+            }
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     //B-12
     public AFD hallarComplemento(){
@@ -885,7 +905,7 @@ public class AFD {
     public static void main(String[] args){
         char[] simbolos = {'a','b'};
         Alfabeto alf = new Alfabeto(simbolos);
-        int numEstados = 5;
+        int numEstados = 2;
         ArrayList<Estado> estados = new ArrayList<Estado>();
         for (int i = 0; i < numEstados; i++) {
             estados.add(new Estado());
@@ -902,8 +922,8 @@ public class AFD {
         afd.fillTransitions();
         System.out.println("transiciones: "+afd.getFuncionDeTransicion());
         ArrayList<Estado> estadosAcept = new ArrayList<>();
-        estados.get(4).setAceptacion(true);
-        estadosAcept.add(estados.get(4));
+        estados.get(1).setAceptacion(true);
+        estadosAcept.add(estados.get(1));
         //estadosAcept.add(estados.get(8));
         estados.get(0).setInicial(true);
         afd.setEstadoInicial(estados.get(0));
@@ -957,6 +977,8 @@ public class AFD {
         System.out.println(afd2.procesarCadenaConDetalles("01"));
         System.out.println(afd2.procesarCadenaConDetalles("010"));
         System.out.println(afd2.procesarCadenaConDetalles("011"));*/
+        String[] listaCad = {"aab","baba","abab"};
+        afd.procesarListaCadenas(listaCad, "ListCadAFD", true);
         System.exit(0);
     }
 }
