@@ -1,4 +1,4 @@
-package TALLER;
+package TALLER.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import TALLER.AFN;
+import TALLER.Alfabeto;
+import TALLER.Estado;
 
 public class AFNTest {
     @Test 

@@ -1,5 +1,7 @@
-package TALLER;
+package TALLER.Test;
 import org.junit.jupiter.api.Test;
+
+import TALLER.Estado;
 
 public class EstadoTest {
     @Test

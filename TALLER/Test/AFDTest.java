@@ -1,8 +1,11 @@
-package TALLER;
+package TALLER.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 
+import TALLER.AFD;
+import TALLER.Alfabeto;
+import TALLER.Estado;
 import TALLER.GUITABLA.MatrixGUI;
 
 public class AFDTest {
