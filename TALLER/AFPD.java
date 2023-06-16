@@ -3,14 +3,14 @@ package TALLER;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
+
 import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import javafx.util.Pair;
 
 public class AFPD {
     
@@ -24,7 +24,7 @@ public class AFPD {
         estados.stream().filter(p -> p.isAceptacion()).collect(Collectors.toList())
     );
     private HashMap<Estado, HashMap<Character,Estado>> funcionDeTransicion;
-    private HashMap<Estado, HashMap<String,String>> funcionDeTransicionPila;
+    private HashMap<Estado, HashMap<Character,Character>> funcionDeTransicionPila;
     //El index del array 0 es para el hashmap char estado de las transiciones de estado
     //El index del array 0 es para el hashmap char char para los movimientos de la pila
     private ArrayList<Estado> estadosLimbo = new ArrayList<>(
@@ -37,7 +37,7 @@ public class AFPD {
     //<>
     public AFPD(Alfabeto alfabetoCinta,Alfabeto alfabetoPila, ArrayList<Estado> estados,
      HashMap<Estado, HashMap<Character,Estado>> funcionDeTransicion,
-     HashMap<Estado, HashMap<String,String>> funcionDeTransicionPila){
+     HashMap<Estado, HashMap<Character,Character>> funcionDeTransicionPila){
         this.alfabeto=alfabetoCinta;
         this.alfabetoPila=alfabetoPila;
         this.estados=estados;
@@ -140,15 +140,23 @@ public class AFPD {
                     break;
                 }
                 while(status==4 && flag){
-                    String[] parts = linea.split(":");
+                    String[] p1 = linea.split(">");
+                    String[] parts = p1[0].split(":");
                     Estado estadoOrigen = mapEstados.get(parts[0]);
-                    String[] parts2 = parts[1].split(">");
-                    char simbolo = parts2[0].toCharArray()[0];
-                    Estado estadoDestino = mapEstados.get(parts2[1]);
+                    char simbolo = parts[1].toCharArray()[0];
+                    char simboloP = parts[2].toCharArray()[0];
+                    String[] parts2 = p1[1].split(":");
+                    Estado estadoDestino = mapEstados.get(parts2[0]);
+                    char simboloP2 = parts2[1].toCharArray()[0];
+
                     //System.out.println("estDest"+estadoDestino);
                     HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
                     transiciones.put(simbolo, estadoDestino);
                     funcionDeTransicion.put(estadoOrigen, transiciones);
+
+                    HashMap<Character, Character> transicionesP = funcionDeTransicionPila.getOrDefault(estadoOrigen, new HashMap<>());
+                    transicionesP.put(simboloP, simboloP2);
+                    funcionDeTransicionPila.put(estadoOrigen, transicionesP);
                     break;
                 }
                 //System.out.println(linea+"estado: "+status+flag);
