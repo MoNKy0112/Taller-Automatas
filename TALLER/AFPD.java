@@ -1,8 +1,12 @@
 package TALLER;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
@@ -39,6 +43,150 @@ public class AFPD {
         this.estados=estados;
         this.funcionDeTransicion=funcionDeTransicion;
         this.funcionDeTransicionPila=funcionDeTransicionPila;
+    }
+    //TODO probar con archivo "probarAFPD"
+    public AFPD(String nombreArchivo) {
+        File archivo = null;
+        FileReader fr = null;
+        BufferedReader br = null;
+        
+        ArrayList<Estado> estados = new ArrayList<>();
+        HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion = new HashMap<>();
+        HashMap<Estado, HashMap<Character, Character>> funcionDeTransicionPila = new HashMap<>();
+        ArrayList<Character> simbolos = new ArrayList<>();
+        ArrayList<Character> simbolosPila = new ArrayList<>();
+        Map<String,Estado> mapEstados = new HashMap<>();
+        try {
+            // Apertura del fichero y creacion de BufferedReader para poder
+            // hacer una lectura comoda (disponer del metodo readLine()).
+            archivo = new File (nombreArchivo+".dfa");
+            fr = new FileReader (archivo);
+            br = new BufferedReader(fr);
+            
+            // Lectura del fichero
+            String linea;
+            int status = -1;
+            boolean flag=false;
+            while((linea=br.readLine())!=null){
+                flag=true;
+                if(linea.equals("#tapeAlphabet")){
+                    status = 0;
+                    flag=false;
+                }
+                if(linea.equals("#stackAlphabet")){
+                    status = 5;
+                    flag=false;
+                }
+                if(linea.equals("#states")){
+                    status = 1;
+                    flag=false;
+                }
+                if(linea.equals("#initial")){
+                    status = 2;
+                    flag=false;
+                }
+                if(linea.equals("#accepting")){
+                    status = 3;
+                    flag=false;
+                }
+                if(linea.equals("#transitions")){
+                    status = 4;
+                    flag=false;
+                }
+                while(status==0 && flag){
+                    if(linea.length()==1){
+                        simbolos.add(linea.toCharArray()[0]);
+                    }else if(linea.contains("-")){
+                        String[] parts = linea.split("-");
+                        int a = (int)parts[0].toCharArray()[0];
+                        int b = (int)parts[1].toCharArray()[0];
+                        for (int i=a;i<b+1;i++){
+                            simbolos.add((char)i);
+                        }
+                    }
+                    break;
+                }
+                while(status==5 && flag){
+                    if(linea.length()==1){
+                        simbolosPila.add(linea.toCharArray()[0]);
+                    }else if(linea.contains("-")){
+                        String[] parts = linea.split("-");
+                        int a = (int)parts[0].toCharArray()[0];
+                        int b = (int)parts[1].toCharArray()[0];
+                        for (int i=a;i<b+1;i++){
+                            simbolosPila.add((char)i);
+                        }
+                    }
+                    break;
+                }
+                while(status==1 && flag){
+                    Estado nuevoEstado = new Estado();
+                    mapEstados.put(linea, nuevoEstado);
+                    estados.add(nuevoEstado);
+                    break;
+                }
+                while(status==2 && flag){
+                    Estado estado = mapEstados.get(linea);
+                    int index = estados.indexOf(estado);
+                    estados.get(index).setInicial(true);
+                    this.setEstadoInicial(estado);
+                    break;
+                }
+                while(status==3 && flag){
+                    Estado estado = mapEstados.get(linea);
+                    int index = estados.indexOf(estado);
+                    estados.get(index).setAceptacion(true);
+                    System.out.println(estado+"seted aceptation");
+                    break;
+                }
+                while(status==4 && flag){
+                    String[] parts = linea.split(":");
+                    Estado estadoOrigen = mapEstados.get(parts[0]);
+                    String[] parts2 = parts[1].split(">");
+                    char simbolo = parts2[0].toCharArray()[0];
+                    Estado estadoDestino = mapEstados.get(parts2[1]);
+                    //System.out.println("estDest"+estadoDestino);
+                    HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
+                    transiciones.put(simbolo, estadoDestino);
+                    funcionDeTransicion.put(estadoOrigen, transiciones);
+                    break;
+                }
+                //System.out.println(linea+"estado: "+status+flag);
+            }
+              
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            // En el finally cerramos el fichero, para asegurarnos
+            // que se cierra tanto si todo va bien como si salta 
+            // una excepcion.
+            try{                    
+               if( null != fr ){   
+                  fr.close();     
+               }                  
+            }catch (Exception e2){ 
+               e2.printStackTrace();
+            }
+        }
+        
+        Character[] sim = simbolos.toArray(new Character[simbolos.size()]);
+        char[] simb = new char[simbolos.size()];
+        for(int i=0;i<sim.length;i++) simb[i]=sim[i];
+        char[] simbolosAlf = simb;
+        Alfabeto alfabeto = new Alfabeto(simbolosAlf);
+        Character[] simP = simbolosPila.toArray(new Character[simbolos.size()]);
+        char[] simbP = new char[simbolosPila.size()];
+        for(int i=0;i<simP.length;i++) simbP[i]=simP[i];
+        char[] simbolosAlfP = simbP;
+        Alfabeto alfabetoP = new Alfabeto(simbolosAlfP);
+        this.alfabeto = alfabeto;
+        this.alfabetoPila = alfabetoP;
+        this.estados = estados;
+        this.funcionDeTransicion = funcionDeTransicion;
+        //System.out.println(this.getFuncionDeTransicion());
+        //correjirCompletitud
+        this.setEstadosDeAceptacion(estados.stream().filter(est -> est.isAceptacion())
+        .collect(Collectors.toCollection(ArrayList::new)));       
     }
 
     public boolean modificarPila(Character parametro,Character operacion){
@@ -83,6 +231,27 @@ public class AFPD {
             return false;
         }
     }
+    //TODO probar
+    public boolean procesarCadenaConDetalles(String cadena,Character parametro, Character operacion) {
+        Estado estadoActual = estadoInicial;
+        System.out.println("Cadena: "+cadena);
+        System.out.print("("+estadoActual+","+cadena+","+pila+")");
+        for(int i=0;i<cadena.length();i++){
+            if(!modificarPila(parametro, operacion)){
+                System.out.println("Aborted");
+                return false;
+            }
+            estadoActual = transicion(estadoActual, cadena.charAt(i));
+            System.out.print("("+estadoActual+","+cadena.substring(i, cadena.length())+","+pila+")");
+        }
+        if(estadosDeAceptacion.contains(estadoActual) && pila.empty()){
+            System.out.println("Accepted");
+            return true;
+        }else{
+            System.out.println("Rejected");
+            return false;
+        }
+    }
 
     public Estado transicion(Estado estadoOrigen, char simbolo){
         if (!this.alfabeto.contieneSimbolo(simbolo)){
@@ -101,6 +270,15 @@ public class AFPD {
         return this.estados.contains(estado);
     }
 
+    public void setEstadosDeAceptacion(ArrayList<Estado> estadosDeAceptacion) {
+        for(Estado estado:estadosDeAceptacion)estado.setAceptacion(true);
+        this.estadosDeAceptacion = estadosDeAceptacion;
+    }
+
+    public void setEstadoInicial(Estado estadoInicial) {
+        estadoInicial.setInicial(true);
+        this.estadoInicial = estadoInicial;
+    }
 
 
     public static void main(String[] args){
