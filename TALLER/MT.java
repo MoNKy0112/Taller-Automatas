@@ -3,6 +3,7 @@ package TALLER;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,7 @@ public class MT {
         try {
             // Apertura del fichero y creacion de BufferedReader para poder
             // hacer una lectura comoda (disponer del metodo readLine()).
-            archivo = new File (nombreArchivo+".dfa");
+            archivo = new File (nombreArchivo+".tm");
             fr = new FileReader (archivo);
             br = new BufferedReader(fr);
             
@@ -186,7 +187,7 @@ public class MT {
         this.setEstadosDeAceptacion(estados.stream().filter(est -> est.isAceptacion())
         .collect(Collectors.toCollection(ArrayList::new)));       
     }
-
+    //TODO probar todo MT
     public int movimientoCinta(Character desp){
         if(desp.equals('-')){
             return 0;
@@ -223,6 +224,180 @@ public class MT {
             }
         }
         return true;
+    }
+
+    public boolean procesarCadenaConDetalle(String cadena){
+        //char[] cad = cadena.toCharArray();
+        Estado estadoActual = estadoInicial;
+        int pos=0;
+        System.out.print("("+estadoActual+")"+cadena+"->");
+        while(!estadosDeAceptacion.contains(estadoActual)){
+            char ch=cadena.substring(pos,pos+1).toCharArray()[0];
+            if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
+            || !funcionDeTransicionCinta.get(estadoActual).containsKey(ch)){
+                return false;
+            }else{
+                Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
+                estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
+                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                pos=pos+movimientoCinta(simbolos[1]);
+            }
+            if(pos==-1){
+                cadena='!'+cadena.substring(0, cadena.length());
+                pos++;
+            }else if(pos>cadena.length()){
+                cadena=cadena.substring(0, cadena.length())+'!';
+                pos--;
+            }
+            System.out.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length()));
+        }
+        return true;
+    }
+
+    public String procesarFuncion(String cadena){
+        //char[] cad = cadena.toCharArray();
+        Estado estadoActual = estadoInicial;
+        int pos=0;
+        while(!estadosDeAceptacion.contains(estadoActual)){
+            if(pos==-1){
+                cadena='!'+cadena.substring(0, cadena.length());
+                pos++;
+            }else if(pos>cadena.length()){
+                cadena=cadena.substring(0, cadena.length())+'!';
+                pos--;
+            }
+            char ch=cadena.substring(pos,pos+1).toCharArray()[0];
+            if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
+            || !funcionDeTransicionCinta.get(estadoActual).containsKey(ch)){
+                return cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length());
+            }else{
+                Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
+                estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
+                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                pos=pos+movimientoCinta(simbolos[1]);
+            }
+        }
+        return cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length());
+    }
+
+    public void procesarListaCadenas(ArrayList<String> listaCadenas,String nombreArchivo,
+    boolean imprimirPantalla){
+        if(nombreArchivo==null){
+            nombreArchivo="defaultProcesarListaCadenasMT";
+        }
+        Estado estadoActual = estadoInicial;
+        try {
+            PrintWriter writer = new PrintWriter(nombreArchivo+".txt", "UTF-8");
+            for(String cadena : listaCadenas){
+                estadoActual = estadoInicial;
+                writer.print(cadena+"\t");
+                if(imprimirPantalla)System.out.print(cadena+"\t");
+                int pos=0;
+                while(!estadosDeAceptacion.contains(estadoActual)){
+                    if(pos==-1){
+                        cadena='!'+cadena.substring(0, cadena.length());
+                        pos++;
+                    }else if(pos>cadena.length()){
+                        cadena=cadena.substring(0, cadena.length())+'!';
+                        pos--;
+                    }
+                    char ch=cadena.substring(pos,pos+1).toCharArray()[0];
+                    if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
+                    || !funcionDeTransicionCinta.get(estadoActual).containsKey(ch)){
+                        writer.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"NO");
+                        if(imprimirPantalla)System.out.print(cadena.substring(0, pos)
+                        +"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"NO");
+                        break;
+                    }else{
+                        Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
+                        estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
+                        cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                        pos=pos+movimientoCinta(simbolos[1]);
+                    }
+                }
+                writer.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"YES");
+                if(imprimirPantalla)System.out.print(cadena.substring(0, pos)
+                +"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"YES");
+            }
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportar(String nombreArchivo){
+        if(nombreArchivo==null){
+            nombreArchivo="probarMT";
+        }
+        try {
+            PrintWriter writer = new PrintWriter(nombreArchivo+".tm", "UTF-8");
+            writer.println("#!tm");
+            writer.println("#states");
+            for(Estado estado : estados){
+                writer.println(estado.toString());
+            }
+            writer.println("#initial");
+            writer.println(estadoInicial.toString());
+            writer.println("#accepting");
+            for(Estado estado : estadosDeAceptacion){
+                writer.println(estado.toString());
+            }
+            writer.println("#inputAlphabet");
+            for(char simbolo : alfabetoEntrada.getSimbolos()){
+                writer.println(simbolo);
+            }
+            writer.println("#tapeAlphabet");
+            for(char simbolo : alfabetoCinta.getSimbolos()){
+                writer.println(simbolo);
+            }
+            writer.println("#transitions");
+            for(Estado estado : estados){
+                for(char simbolo : alfabetoCinta.getSimbolos()){
+                    if(funcionDeTransicion.get(estado).containsKey(simbolo) && funcionDeTransicionCinta.get(estado).containsKey(simbolo)){
+                        writer.println(estado.toString()+":"+simbolo+
+                        "?"+funcionDeTransicion.get(estado).get(simbolo).toString()
+                        +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[0]
+                        +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[1]);
+                    }
+                }
+            }
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void toSting(){
+        System.out.println("#!tm");
+        System.out.println("#states");
+        for(Estado estado : estados){
+            System.out.println(estado.toString());
+        }
+        System.out.println("#initial");
+        System.out.println(estadoInicial.toString());
+        System.out.println("#accepting");
+        for(Estado estado : estadosDeAceptacion){
+            System.out.println(estado.toString());
+        }
+        System.out.println("#inputAlphabet");
+        for(char simbolo : alfabetoEntrada.getSimbolos()){
+            System.out.println(simbolo);
+        }
+        System.out.println("#tapeAlphabet");
+        for(char simbolo : alfabetoCinta.getSimbolos()){
+            System.out.println(simbolo);
+        }
+        System.out.println("#transitions");
+        for(Estado estado : estados){
+            for(char simbolo : alfabetoCinta.getSimbolos()){
+                if(funcionDeTransicion.get(estado).containsKey(simbolo) && funcionDeTransicionCinta.get(estado).containsKey(simbolo)){
+                    System.out.println(estado.toString()+":"+simbolo+
+                    "?"+funcionDeTransicion.get(estado).get(simbolo).toString()
+                    +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[0]
+                    +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[1]);
+                }
+            }
+        }
     }
 
 
