@@ -318,6 +318,40 @@ public class AFN_Lambda {
 
     }
 
+    public void toStringAFNL(){
+        System.out.println("#!nfe");
+        System.out.println("#alphabet");
+        for(char simbolo : alfabeto.getSimbolos()){
+            System.out.println(simbolo);
+        }
+        System.out.println("#states");
+        for(Estado estado : estados){
+            System.out.println(estado.toString());
+        }
+        System.out.println("#initial");
+        System.out.println(estadoInicial.toString());
+        System.out.println("#accepting");
+        for(Estado estado : estadosDeAceptacion){
+            System.out.println(estado.toString());
+        }
+        System.out.println("#transitions");
+        for(Estado estado : estados){
+            for(char simbolo : alfabeto.getSimbolos()){
+                if(!funcionDeTransicion.get(estado).get(simbolo).contains(null)){
+                    System.out.print(estado.toString()+":"+simbolo+">");
+                    List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
+                    System.out.println(funcionDeTransicion.get(estado).get(simbolo));
+                    for(int i=0;i<estadosDest.size()-1;i++) {
+                        System.out.print(estadosDest.get(i)+";");
+                    }
+                    System.out.print(estadosDest.get(estadosDest.size()-1));
+                    System.out.print("\n");
+                }
+            }
+        }     
+    }
+
+
     public ArrayList<Estado> hallarEstadosInaccesibles(){
         Set<Estado> accesibles = new HashSet<>();
         Queue<Estado> queue = new LinkedList<>();

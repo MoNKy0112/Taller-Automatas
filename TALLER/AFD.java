@@ -2,7 +2,7 @@ package TALLER;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-import TALLER.GRAPH.AFDGraphGUI;
+import TALLER.GRAPH.AFGraphGUI;
 import TALLER.GUITABLA.MatrixGUI;
 
 import java.util.HashMap;
@@ -375,7 +375,7 @@ public class AFD {
                 }
             }
 
-            AFDGraphGUI gui = new AFDGraphGUI(this);
+            AFGraphGUI gui = new AFGraphGUI(this);
             while(gui.isVisible()){
                 try {
                     Thread.sleep(100);

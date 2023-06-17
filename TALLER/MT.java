@@ -367,7 +367,7 @@ public class MT {
         }
     }
 
-    public void toSting(){
+    public void toStringMT(){
         System.out.println("#!tm");
         System.out.println("#states");
         for(Estado estado : estados){
