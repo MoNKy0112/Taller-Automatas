@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import TALLER.GRAPH.AFGraphGUI;
 import TALLER.GUITABLA.MatrixGUIAFN;
 
 public class AFN {
@@ -184,8 +185,8 @@ public class AFN {
         hallarEstadosLimbo();
     }
 
-    /*
-    public void imprimirAFDSimplificado(){
+    
+    public void imprimirAFNSimplificado(){
         System.out.println("#!dfa");
         System.out.println("#alphabet");
             for(char simbolo : alfabeto.getSimbolos()){
@@ -211,7 +212,7 @@ public class AFN {
                 }
             }
 
-            AFDGraphGUI gui = new AFDGraphGUI(this);
+            AFGraphGUI gui = new AFGraphGUI(this);
             while(gui.isVisible()){
                 try {
                     Thread.sleep(100);
@@ -220,7 +221,7 @@ public class AFN {
                 }
             }
             System.out.println("11111111111111111");
-    }*/
+    }
 
     private boolean contieneEstado(Estado estado){
         return this.estados.contains(estado);
