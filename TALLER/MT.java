@@ -3,19 +3,14 @@ package TALLER;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import java.util.Map;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
-
-public class AFPD {
-    
-    private Alfabeto alfabeto = new Alfabeto(null);
-    private Alfabeto alfabetoPila = new Alfabeto(null);
+public class MT {
+    private Alfabeto alfabetoEntrada = new Alfabeto(null);
+    private Alfabeto alfabetoCinta = new Alfabeto(null);
     private ArrayList<Estado> estados = new ArrayList<Estado>();
     private Estado estadoInicial = estados.stream().filter(p -> p.isInicial()).findFirst().orElse(
         estados.stream().findFirst().orElse(null)
@@ -24,32 +19,31 @@ public class AFPD {
         estados.stream().filter(p -> p.isAceptacion()).collect(Collectors.toList())
     );
     private HashMap<Estado, HashMap<Character,Estado>> funcionDeTransicion;
-    private HashMap<Estado, HashMap<Character,Character>> funcionDeTransicionPila;
-    //El index del array 0 es para el hashmap char estado de las transiciones de estado
-    //El index del array 0 es para el hashmap char char para los movimientos de la pila
-    private Stack pila = new Stack<Character>();
-    //<>
-    public AFPD(Alfabeto alfabetoCinta,Alfabeto alfabetoPila, ArrayList<Estado> estados,
-     HashMap<Estado, HashMap<Character,Estado>> funcionDeTransicion,
-     HashMap<Estado, HashMap<Character,Character>> funcionDeTransicionPila){
-        this.alfabeto=alfabetoCinta;
-        this.alfabetoPila=alfabetoPila;
+    private HashMap<Estado, HashMap<Character,Character[]>> funcionDeTransicionCinta;
+
+
+    public MT(Alfabeto alfabetoEntrada,Alfabeto alfabetoCinta, ArrayList<Estado> estados,
+     HashMap<Estado, HashMap<Character ,Estado>> funcionDeTransicion,
+     HashMap<Estado, HashMap<Character,Character[]>> funcionDeTransicionCinta){
+        this.alfabetoEntrada=alfabetoEntrada;
+        this.alfabetoCinta=alfabetoCinta;
         this.estados=estados;
         this.funcionDeTransicion=funcionDeTransicion;
-        this.funcionDeTransicionPila=funcionDeTransicionPila;
+        this.funcionDeTransicionCinta=funcionDeTransicionCinta;
     }
-    //TODO probar con archivo "probarAFPD"
-    public AFPD(String nombreArchivo) {
+
+    public MT(String nombreArchivo) {
         File archivo = null;
         FileReader fr = null;
         BufferedReader br = null;
         
         ArrayList<Estado> estados = new ArrayList<>();
         HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion = new HashMap<>();
-        HashMap<Estado, HashMap<Character, Character>> funcionDeTransicionPila = new HashMap<>();
-        ArrayList<Character> simbolos = new ArrayList<>();
-        ArrayList<Character> simbolosPila = new ArrayList<>();
+        HashMap<Estado, HashMap<Character, Character[]>> funcionDeTransicionCinta = new HashMap<>();
+        ArrayList<Character> simbolosEntrada = new ArrayList<>();
+        ArrayList<Character> simbolosCinta = new ArrayList<>();
         Map<String,Estado> mapEstados = new HashMap<>();
+
         try {
             // Apertura del fichero y creacion de BufferedReader para poder
             // hacer una lectura comoda (disponer del metodo readLine()).
@@ -63,11 +57,11 @@ public class AFPD {
             boolean flag=false;
             while((linea=br.readLine())!=null){
                 flag=true;
-                if(linea.equals("#tapeAlphabet")){
+                if(linea.equals("#inputAlphabet")){
                     status = 0;
                     flag=false;
                 }
-                if(linea.equals("#stackAlphabet")){
+                if(linea.equals("#tapeAlphabet")){
                     status = 5;
                     flag=false;
                 }
@@ -89,26 +83,26 @@ public class AFPD {
                 }
                 while(status==0 && flag){
                     if(linea.length()==1){
-                        simbolos.add(linea.toCharArray()[0]);
+                        simbolosEntrada.add(linea.toCharArray()[0]);
                     }else if(linea.contains("-")){
                         String[] parts = linea.split("-");
                         int a = (int)parts[0].toCharArray()[0];
                         int b = (int)parts[1].toCharArray()[0];
                         for (int i=a;i<b+1;i++){
-                            simbolos.add((char)i);
+                            simbolosEntrada.add((char)i);
                         }
                     }
                     break;
                 }
                 while(status==5 && flag){
                     if(linea.length()==1){
-                        simbolosPila.add(linea.toCharArray()[0]);
+                        simbolosCinta.add(linea.toCharArray()[0]);
                     }else if(linea.contains("-")){
                         String[] parts = linea.split("-");
                         int a = (int)parts[0].toCharArray()[0];
                         int b = (int)parts[1].toCharArray()[0];
                         for (int i=a;i<b+1;i++){
-                            simbolosPila.add((char)i);
+                            simbolosCinta.add((char)i);
                         }
                     }
                     break;
@@ -134,23 +128,25 @@ public class AFPD {
                     break;
                 }
                 while(status==4 && flag){
-                    String[] p1 = linea.split(">");
+                    Character[] simbolos = new Character[2];
+                    String[] p1 = linea.split("?");
                     String[] parts = p1[0].split(":");
                     Estado estadoOrigen = mapEstados.get(parts[0]);
                     char simbolo = parts[1].toCharArray()[0];
-                    char simboloP = parts[2].toCharArray()[0];
+                    
                     String[] parts2 = p1[1].split(":");
                     Estado estadoDestino = mapEstados.get(parts2[0]);
-                    char simboloP2 = parts2[1].toCharArray()[0];
+                    simbolos[0] = parts2[1].toCharArray()[0];
+                    simbolos[1] = parts2[2].toCharArray()[0];
 
                     //System.out.println("estDest"+estadoDestino);
                     HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
                     transiciones.put(simbolo, estadoDestino);
                     funcionDeTransicion.put(estadoOrigen, transiciones);
+                    HashMap<Character, Character[]> transicionesCinta = funcionDeTransicionCinta.getOrDefault(estadoOrigen, new HashMap<>());
+                    transicionesCinta.put(simbolo, simbolos);
+                    
 
-                    HashMap<Character, Character> transicionesP = funcionDeTransicionPila.getOrDefault(estadoOrigen, new HashMap<>());
-                    transicionesP.put(simboloP, simboloP2);
-                    funcionDeTransicionPila.put(estadoOrigen, transicionesP);
                     break;
                 }
                 //System.out.println(linea+"estado: "+status+flag);
@@ -171,18 +167,18 @@ public class AFPD {
             }
         }
         
-        Character[] sim = simbolos.toArray(new Character[simbolos.size()]);
-        char[] simb = new char[simbolos.size()];
+        Character[] sim = simbolosEntrada.toArray(new Character[simbolosEntrada.size()]);
+        char[] simb = new char[simbolosEntrada.size()];
         for(int i=0;i<sim.length;i++) simb[i]=sim[i];
         char[] simbolosAlf = simb;
         Alfabeto alfabeto = new Alfabeto(simbolosAlf);
-        Character[] simP = simbolosPila.toArray(new Character[simbolos.size()]);
-        char[] simbP = new char[simbolosPila.size()];
+        Character[] simP = simbolosCinta.toArray(new Character[simbolosCinta.size()]);
+        char[] simbP = new char[simbolosCinta.size()];
         for(int i=0;i<simP.length;i++) simbP[i]=simP[i];
         char[] simbolosAlfP = simbP;
-        Alfabeto alfabetoP = new Alfabeto(simbolosAlfP);
-        this.alfabeto = alfabeto;
-        this.alfabetoPila = alfabetoP;
+        Alfabeto alfabetoC = new Alfabeto(simbolosAlfP);
+        this.alfabetoEntrada = alfabeto;
+        this.alfabetoCinta = alfabetoC;
         this.estados = estados;
         this.funcionDeTransicion = funcionDeTransicion;
         //System.out.println(this.getFuncionDeTransicion());
@@ -191,73 +187,50 @@ public class AFPD {
         .collect(Collectors.toCollection(ArrayList::new)));       
     }
 
-    public boolean modificarPila(Character parametro,Character operacion){
-        if (!this.alfabetoPila.contieneSimbolo(parametro) && parametro!='$'){
-            throw new IllegalArgumentException("El simbolo "+parametro+" no pertenece al alfabeto de la pila del automata");
-        }
-        if (!this.alfabetoPila.contieneSimbolo(operacion) && operacion!='$'){
-            throw new IllegalArgumentException("El simbolo "+operacion+" no pertenece al alfabeto de la pila del automata");
-        }
-        if(parametro.equals('$')){
-            if(operacion.equals(parametro)){
-            }else{
-                pila.push(operacion);
-            }
-        }else if(pila.isEmpty()){
-            return false;
-        }
-        else if(pila.peek().equals(parametro)){
-            if(operacion.equals('$')){
-                pila.pop();
-            }else if(operacion.equals(parametro)){
-            }else{
-                pila.pop();
-                pila.push(operacion);
-            }
+    public int movimientoCinta(Character desp){
+        if(desp.equals('-')){
+            return 0;
+        }else if(desp.equals('<')){
+            return -1;
+        }else if(desp.equals('>')){
+            return 1;
         }else{
-            return false;
+            throw new IllegalArgumentException("El simbolo "+desp+" no es un desplazamiento permitido");
+        }
+    }
+
+    public boolean procesarCadena(String cadena){
+        //char[] cad = cadena.toCharArray();
+        Estado estadoActual = estadoInicial;
+        int pos=0;
+        while(!estadosDeAceptacion.contains(estadoActual)){
+            if(pos==-1){
+                cadena='!'+cadena.substring(0, cadena.length());
+                pos++;
+            }else if(pos>cadena.length()){
+                cadena=cadena.substring(0, cadena.length())+'!';
+                pos--;
+            }
+            char ch=cadena.substring(pos,pos+1).toCharArray()[0];
+            if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
+            || !funcionDeTransicionCinta.get(estadoActual).containsKey(ch)){
+                return false;
+            }else{
+                Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
+                estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
+                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                pos=pos+movimientoCinta(simbolos[1]);
+            }
         }
         return true;
     }
-    //TODO probar en main, para esto falta crear las transiciones
-    public boolean procesarCadena(String cadena,Character parametro, Character operacion) {
-        Estado estadoActual = estadoInicial;
 
-        for(int i=0;i<cadena.length();i++){
-            if(!modificarPila(parametro, operacion))return false;
-            estadoActual = transicion(estadoActual, cadena.charAt(i));
-        }
-        if(estadosDeAceptacion.contains(estadoActual) && pila.empty()){
-            return true;
-        }else{
-            return false;
-        }
-    }
-    //TODO probar
-    public boolean procesarCadenaConDetalles(String cadena,Character parametro, Character operacion) {
-        Estado estadoActual = estadoInicial;
-        System.out.println("Cadena: "+cadena);
-        System.out.print("("+estadoActual+","+cadena+","+pila+")");
-        for(int i=0;i<cadena.length();i++){
-            if(!modificarPila(parametro, operacion)){
-                System.out.println(">>Aborted");
-                return false;
+
+    public Estado transicion(Estado estadoOrigen, Character simbolo){
+        for(int i=0;i<3;i++){
+            if (!this.alfabetoCinta.contieneSimbolo(simbolo)){
+                throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
             }
-            estadoActual = transicion(estadoActual, cadena.charAt(i));
-            System.out.print("->("+estadoActual+","+cadena.substring(i, cadena.length())+","+pila+")");
-        }
-        if(estadosDeAceptacion.contains(estadoActual) && pila.empty()){
-            System.out.println(">>Accepted");
-            return true;
-        }else{
-            System.out.println(">>Rejected");
-            return false;
-        }
-    }
-
-    public Estado transicion(Estado estadoOrigen, char simbolo){
-        if (!this.alfabeto.contieneSimbolo(simbolo)){
-            throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
         }
         if (!contieneEstado(estadoOrigen)){
             throw new IllegalArgumentException("El estado " + estadoOrigen + " no pertenece al conjunto de estados del autómata.");
@@ -272,27 +245,14 @@ public class AFPD {
         return this.estados.contains(estado);
     }
 
-    public void setEstadosDeAceptacion(ArrayList<Estado> estadosDeAceptacion) {
-        for(Estado estado:estadosDeAceptacion)estado.setAceptacion(true);
-        this.estadosDeAceptacion = estadosDeAceptacion;
-    }
-
     public void setEstadoInicial(Estado estadoInicial) {
         estadoInicial.setInicial(true);
         this.estadoInicial = estadoInicial;
     }
 
-
-    public static void main(String[] args){
-        char[] simbolos = {'0','1'};
-        char[] simbolos2 = {'X','Y'};
-        Alfabeto alf = new Alfabeto(simbolos);
-        Alfabeto alfp = new Alfabeto(simbolos2);
-        int numEstados = 3;
-        ArrayList<Estado> estados = new ArrayList<Estado>();
-        for (int i = 0; i < numEstados; i++) {
-            estados.add(new Estado());
-        }  
-        AFPD afpd = new AFPD(alf, alfp, estados, null, null);
+    public void setEstadosDeAceptacion(ArrayList<Estado> estadosDeAceptacion) {
+        for(Estado estado:estadosDeAceptacion)estado.setAceptacion(true);
+        this.estadosDeAceptacion = estadosDeAceptacion;
     }
+
 }
