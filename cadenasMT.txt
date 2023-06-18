@@ -1,0 +1,4 @@
+aabbcc	XXYYZZ(q5)!	YES
+aaabbcc	XXXYY(q1)ZZ	NO
+aaabbbccc	XXXYYYZZZ(q5)!	YES
+aabbccc	XXYYZZ(q4)c	NO

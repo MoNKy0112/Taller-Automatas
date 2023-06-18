@@ -146,6 +146,7 @@ public class MT {
                     funcionDeTransicion.put(estadoOrigen, transiciones);
                     HashMap<Character, Character[]> transicionesCinta = funcionDeTransicionCinta.getOrDefault(estadoOrigen, new HashMap<>());
                     transicionesCinta.put(simbolo, simbolos);
+                    funcionDeTransicionCinta.put(estadoOrigen, transicionesCinta);
                     
 
                     break;
@@ -208,9 +209,8 @@ public class MT {
             if(pos==-1){
                 cadena='!'+cadena.substring(0, cadena.length());
                 pos++;
-            }else if(pos>cadena.length()){
+            }else if(pos==cadena.length()){
                 cadena=cadena.substring(0, cadena.length())+'!';
-                pos--;
             }
             char ch=cadena.substring(pos,pos+1).toCharArray()[0];
             if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
@@ -219,7 +219,7 @@ public class MT {
             }else{
                 Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
                 estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
-                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos+1, cadena.length());
                 pos=pos+movimientoCinta(simbolos[1]);
             }
         }
@@ -230,7 +230,7 @@ public class MT {
         //char[] cad = cadena.toCharArray();
         Estado estadoActual = estadoInicial;
         int pos=0;
-        System.out.print("("+estadoActual+")"+cadena+"->");
+        System.out.print("("+estadoActual+")"+cadena+" -> ");
         while(!estadosDeAceptacion.contains(estadoActual)){
             char ch=cadena.substring(pos,pos+1).toCharArray()[0];
             if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
@@ -239,17 +239,16 @@ public class MT {
             }else{
                 Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
                 estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
-                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos+1, cadena.length());
                 pos=pos+movimientoCinta(simbolos[1]);
             }
             if(pos==-1){
                 cadena='!'+cadena.substring(0, cadena.length());
                 pos++;
-            }else if(pos>cadena.length()){
+            }else if(pos==cadena.length()){
                 cadena=cadena.substring(0, cadena.length())+'!';
-                pos--;
             }
-            System.out.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length()));
+            System.out.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+" -> ");
         }
         return true;
     }
@@ -262,18 +261,18 @@ public class MT {
             if(pos==-1){
                 cadena='!'+cadena.substring(0, cadena.length());
                 pos++;
-            }else if(pos>cadena.length()){
+            }else if(pos==cadena.length()){
                 cadena=cadena.substring(0, cadena.length())+'!';
-                pos--;
             }
             char ch=cadena.substring(pos,pos+1).toCharArray()[0];
+            //System.out.println(cadena+":"+pos+":"+estadoActual);
             if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
             || !funcionDeTransicionCinta.get(estadoActual).containsKey(ch)){
                 return cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length());
             }else{
                 Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
                 estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
-                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos+1, cadena.length());
                 pos=pos+movimientoCinta(simbolos[1]);
             }
         }
@@ -282,6 +281,7 @@ public class MT {
 
     public void procesarListaCadenas(ArrayList<String> listaCadenas,String nombreArchivo,
     boolean imprimirPantalla){
+        boolean jump=false;
         if(nombreArchivo==null){
             nombreArchivo="defaultProcesarListaCadenasMT";
         }
@@ -289,6 +289,7 @@ public class MT {
         try {
             PrintWriter writer = new PrintWriter(nombreArchivo+".txt", "UTF-8");
             for(String cadena : listaCadenas){
+                jump=false;
                 estadoActual = estadoInicial;
                 writer.print(cadena+"\t");
                 if(imprimirPantalla)System.out.print(cadena+"\t");
@@ -297,27 +298,29 @@ public class MT {
                     if(pos==-1){
                         cadena='!'+cadena.substring(0, cadena.length());
                         pos++;
-                    }else if(pos>cadena.length()){
+                    }else if(pos==cadena.length()){
                         cadena=cadena.substring(0, cadena.length())+'!';
-                        pos--;
                     }
                     char ch=cadena.substring(pos,pos+1).toCharArray()[0];
                     if(!funcionDeTransicion.get(estadoActual).containsKey(ch)
                     || !funcionDeTransicionCinta.get(estadoActual).containsKey(ch)){
-                        writer.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"NO");
-                        if(imprimirPantalla)System.out.print(cadena.substring(0, pos)
-                        +"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"NO");
+                        writer.println(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"\tNO");
+                        if(imprimirPantalla)System.out.println(cadena.substring(0, pos)
+                        +"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"\tNO");
+                        jump=true;
                         break;
                     }else{
                         Character [] simbolos= funcionDeTransicionCinta.get(estadoActual).get(ch);
                         estadoActual=funcionDeTransicion.get(estadoActual).get(ch);
-                        cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos, cadena.length());
+                        cadena=cadena.substring(0, pos)+simbolos[0]+cadena.substring(pos+1, cadena.length());
                         pos=pos+movimientoCinta(simbolos[1]);
                     }
                 }
-                writer.print(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"YES");
-                if(imprimirPantalla)System.out.print(cadena.substring(0, pos)
-                +"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"YES");
+                if(!jump){
+                    writer.println(cadena.substring(0, pos)+"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"\tYES");
+                    if(imprimirPantalla)System.out.println(cadena.substring(0, pos)
+                    +"("+estadoActual+")"+cadena.substring(pos,cadena.length())+"\tYES");
+                }
             }
             writer.close();
         } catch (Exception e) {
@@ -353,11 +356,13 @@ public class MT {
             writer.println("#transitions");
             for(Estado estado : estados){
                 for(char simbolo : alfabetoCinta.getSimbolos()){
-                    if(funcionDeTransicion.get(estado).containsKey(simbolo) && funcionDeTransicionCinta.get(estado).containsKey(simbolo)){
-                        writer.println(estado.toString()+":"+simbolo+
-                        "?"+funcionDeTransicion.get(estado).get(simbolo).toString()
-                        +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[0]
-                        +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[1]);
+                    if(funcionDeTransicion.containsKey(estado) && funcionDeTransicionCinta.containsKey(estado)){
+                        if(funcionDeTransicion.get(estado).containsKey(simbolo) && funcionDeTransicionCinta.get(estado).containsKey(simbolo)){
+                            writer.println(estado.toString()+":"+simbolo+
+                            "?"+funcionDeTransicion.get(estado).get(simbolo).toString()
+                            +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[0]
+                            +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[1]);
+                        }
                     }
                 }
             }
@@ -390,20 +395,33 @@ public class MT {
         System.out.println("#transitions");
         for(Estado estado : estados){
             for(char simbolo : alfabetoCinta.getSimbolos()){
-                if(funcionDeTransicion.get(estado).containsKey(simbolo) && funcionDeTransicionCinta.get(estado).containsKey(simbolo)){
-                    System.out.println(estado.toString()+":"+simbolo+
-                    "?"+funcionDeTransicion.get(estado).get(simbolo).toString()
-                    +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[0]
-                    +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[1]);
+                if(funcionDeTransicion.containsKey(estado) && funcionDeTransicionCinta.containsKey(estado)){
+                    if(funcionDeTransicion.get(estado).containsKey(simbolo) && funcionDeTransicionCinta.get(estado).containsKey(simbolo)){
+                        System.out.println(estado.toString()+":"+simbolo+
+                        "?"+funcionDeTransicion.get(estado).get(simbolo).toString()
+                        +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[0]
+                        +":"+funcionDeTransicionCinta.get(estado).get(simbolo)[1]);
+                    }
                 }
             }
         }
     }
+    //Crea transicion determinada
+    public void crearTransicion(Estado estadoOrigen,Estado estadoDestino,
+    Character simbL,Character simbE,Character desp){
+        Character[] simbolos = {simbE,desp};
+        HashMap<Character, Estado> transiciones = funcionDeTransicion.getOrDefault(estadoOrigen, new HashMap<>());
+        transiciones.put(simbL, estadoDestino);
+        funcionDeTransicion.put(estadoOrigen, transiciones);
+        HashMap<Character, Character[]> transicionesCinta = funcionDeTransicionCinta.getOrDefault(estadoOrigen, new HashMap<>());
+        transicionesCinta.put(simbL, simbolos);
+        funcionDeTransicionCinta.put(estadoOrigen, transicionesCinta);
+    }
 
-
+    //Retorna el estado al cual debe llegar segun delta con un simbolo desde Q estado
     public Estado transicion(Estado estadoOrigen, Character simbolo){
         for(int i=0;i<3;i++){
-            if (!this.alfabetoCinta.contieneSimbolo(simbolo)){
+            if (!this.alfabetoCinta.contieneSimbolo(simbolo) && simbolo.equals('!')){
                 throw new IllegalArgumentException("El simbolo "+simbolo+" no pertenece al alfabeto del automata");
             }
         }
@@ -430,4 +448,46 @@ public class MT {
         this.estadosDeAceptacion = estadosDeAceptacion;
     }
 
+    public static void main(String[] args){
+        char[] simbolos = {'a','b'};
+        char[] simbolosCinta = {'a','b','X','Y','Z'};
+        Alfabeto alfabetoEntrada = new Alfabeto(simbolos);
+        Alfabeto alfabetoCinta = new Alfabeto(simbolosCinta);
+        int numEstados = 6;
+        ArrayList<Estado> estados = new ArrayList<Estado>();
+        for (int i = 0; i < numEstados; i++) {
+            estados.add(new Estado());
+        }  
+        HashMap<Estado, HashMap<Character ,Estado>> funcionDeTransicion = new HashMap<>();
+        HashMap<Estado, HashMap<Character,Character[]>> funcionDeTransicionCinta= new HashMap<>();
+        MT mt=new MT(alfabetoEntrada,alfabetoCinta,estados,funcionDeTransicion,funcionDeTransicionCinta);
+        mt.setEstadoInicial(estados.get(0));
+        ArrayList<Estado> estadosAcept = new ArrayList<>();
+        estadosAcept.add(estados.get(5));
+        mt.setEstadosDeAceptacion(estadosAcept);
+        mt.crearTransicion(estados.get(0), estados.get(1), 'a', 'X', '>');
+        mt.crearTransicion(estados.get(0), estados.get(4), 'Y', 'Y', '>');
+        mt.crearTransicion(estados.get(0), estados.get(5), '!', '!', '-');
+        mt.crearTransicion(estados.get(1), estados.get(1), 'a', 'a', '>');
+        mt.crearTransicion(estados.get(1), estados.get(1), 'Y', 'Y', '>');
+        mt.crearTransicion(estados.get(1), estados.get(2), 'b', 'Y', '>');
+        mt.crearTransicion(estados.get(2), estados.get(2), 'b', 'b', '>');
+        mt.crearTransicion(estados.get(2), estados.get(2), 'Z', 'Z', '>');
+        mt.crearTransicion(estados.get(2), estados.get(3), 'c', 'Z', '<');
+        mt.crearTransicion(estados.get(3), estados.get(0), 'X', 'X', '>');
+        mt.crearTransicion(estados.get(3), estados.get(3), 'a', 'a', '<');
+        mt.crearTransicion(estados.get(3), estados.get(3), 'b', 'b', '<');
+        mt.crearTransicion(estados.get(3), estados.get(3), 'Y', 'Y', '<');
+        mt.crearTransicion(estados.get(3), estados.get(3), 'Z', 'Z', '<');
+        mt.crearTransicion(estados.get(4), estados.get(4), 'Y', 'Y', '>');
+        mt.crearTransicion(estados.get(4), estados.get(4), 'Z', 'Z', '>');
+        mt.crearTransicion(estados.get(4), estados.get(5), '!', '!', '-');
+        ArrayList<String> cadenas = new ArrayList<>();
+        cadenas.add("aabbcc");cadenas.add("aaabbcc");cadenas.add("aaabbbccc");cadenas.add("aabbccc");
+        System.out.println(mt.procesarCadenaConDetalle(cadenas.get(0)));
+        mt.procesarListaCadenas(cadenas, "cadenasMT", false);
+        
+        mt.exportar("ProbarMT");
+        mt.toStringMT();
+    }
 }
