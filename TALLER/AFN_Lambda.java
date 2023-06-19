@@ -210,13 +210,15 @@ public class AFN_Lambda {
             Estado est = queue.poll();
 
             List<Estado> list = transiciones(est, '$');
-
-            for (Estado estList : list) {
-                if (!estados.contains(estList)) {
-                    estados.add(estList);
-                    queue.offer(estList);
+            if(list!=null){
+                for (Estado estList : list) {
+                    if (!estados.contains(estList)) {
+                        estados.add(estList);
+                        queue.offer(estList);
+                    }
                 }
             }
+            
 
         }
         List<Estado> estadosList = new ArrayList<>(estados);
@@ -436,7 +438,9 @@ public class AFN_Lambda {
             for (char simbolo : alf.getSimbolos()) {
                 if (simbolo != '$') {
                     Set<Estado> setTr = new HashSet<>();
+
                     for (Estado estLamb : lEst) {
+                        if(transiciones(estLamb, simbolo)!=null)
                         setTr.addAll(transiciones(estLamb, simbolo));
                     }
                     List<Estado> listTr = new ArrayList<>(setTr);
@@ -445,18 +449,31 @@ public class AFN_Lambda {
             }
             funcionDeTransicion.put(est, transiciones);
         }
+        char[] ch2 = new char[alf.getSimbolos().length];
+        for(int i=0;i<alf.getSimbolos().length;i++){
+            if(alf.getSimbolos()[i]!='$')
+            ch2[i]=alf.getSimbolos()[i];
+        }
+        
+        Alfabeto alf2=new Alfabeto(ch2);
 
-        AFN afn = new AFN(alf, estadosIn, funcionDeTransicion);
+
+        AFN afn = new AFN(alf2, estadosIn, funcionDeTransicion);
         afn.setEstadoInicial(afnl.getEstadoInicial());
 
         return afn;
     }
 
-    // TODO PROBAR
     public AFD AFN_LambdaToAFD(AFN_Lambda afnl) {
 
         AFN afn = AFN_LambdaToAFN(afnl);
+        System.out.println(afn.getFuncionDeTransicion());
         AFD afd = afn.AFNtoAFD(afn);
+        System.out.println(afd.getFuncionDeTransicion());
+
+        //afd.verificarCorregirCompletitudAFD();
+        //afd.simplificarAFD(afd);
+        //afd.imprimirAFDSimplificado();
 
         return afd;
     }
@@ -778,9 +795,10 @@ public class AFN_Lambda {
         // afnl.setEstadosDeAceptacion(estadosAcept);
         // afnl.fillTransitions();
         // afnl.exportar();
-        //afnl.AFN_LambdaToAFD(afnl);  
+        
         AFN_Lambda afnl = new AFN_Lambda("nuevoAFNL");
         System.out.println(afnl.procesarCadenaConDetalles("abab"));
+        afnl.AFN_LambdaToAFD(afnl);  
     }
 
 }
