@@ -190,7 +190,7 @@ public class MatrixGUIAFN extends JFrame {
             for (int j = 0; j < cols; j++) {
                 
                 List<Estado> estados = cells[i][j].getSelectedStates();
-                if (estados == null) {
+                if (estados.isEmpty()) {
                     // Si no se ha seleccionado un estado, se guarda null en la matriz
                     //matrizCeldas[i][j] = null;
                 } else {

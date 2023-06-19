@@ -228,8 +228,8 @@ public class Prueba {
         //prueba.porbarAFNToAFD();
         //prueba.probarComplemento();
         //prueba.probarProductoCartesiano();
-        //prueba.probarSimplificacion();
+        prueba.probarSimplificacion();
         //prueba.porbarAFNLambda();
-        prueba.porbarAFNLambdaToAFN();
+        //prueba.porbarAFNLambdaToAFN();
     }
 }
