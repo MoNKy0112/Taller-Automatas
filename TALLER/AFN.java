@@ -439,6 +439,7 @@ public class AFN {
             for(char simbolo:afn.getAlfabeto().getSimbolos()){
                 Estado[] estadosSig = null;
                 Estado[] estadosInt = estado.getEstados();
+                
                 // try {
                 //     System.in.read();
                 // } catch (Exception e) {
@@ -475,14 +476,15 @@ public class AFN {
                                 newEstado.setAceptacion(true);
                             }
                         }
-                    }else if(newEstado==null){
+                    }else if(estadosSig.length==1 && newEstado==null){
                         newEstado = estadosSig[0];
                         mapEstados.put(Arrays.toString(estadosSig), newEstado);
                     }
+                    if(newEstado!=null)
                     transicion.put(simbolo, newEstado);
                     //System.out.println(simbolo+"="+transicion.get(simbolo));
                     //System.out.println(nuevosEstados);
-                    if(!nuevosEstados.contains(newEstado)){
+                    if(newEstado!=null && !nuevosEstados.contains(newEstado)){
                         queue.offer(newEstado);
                     }
                 }
@@ -738,10 +740,10 @@ public class AFN {
         //System.out.println(afn2.computarTodosLosProcesamientos("001110100101001011011", "afnProcesos"));
         //System.out.println("----------------AFN2-----------");
         //System.out.println(afn2.getFuncionDeTransicion());
-        // AFD afd = afn2.AFNtoAFD(afn2);
-        // afd.verificarCorregirCompletitudAFD();
-        // afd.hallarEstadosInaccesibles();
-        // afd.simplificarAFD(afd);
+        AFD afd = afn2.AFNtoAFD(afn2);
+        afd.verificarCorregirCompletitudAFD();
+        afd.hallarEstadosInaccesibles();
+        afd.simplificarAFD(afd);
         // //System.out.println(afd.getFuncionDeTransicion());
         // System.out.println(afn2.procesarCadenaConDetalles("000001"));
         // System.out.println(afn2.procesarCadenaConDetalles("00000111"));

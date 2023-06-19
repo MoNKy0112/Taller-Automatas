@@ -4,19 +4,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
-
-import javax.swing.text.html.HTMLDocument.RunElement;
-import javax.swing.text.html.HTMLDocument.HTMLReader.CharacterAction;
-
-import org.junit.jupiter.api.DisplayNameGenerator.Simple;
 
 
 public class AFPD {
