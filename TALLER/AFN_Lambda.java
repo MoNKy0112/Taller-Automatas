@@ -39,7 +39,6 @@ public class AFN_Lambda {
     }
 
 
-
     private ArrayList<Estado> estadosInaccesibles = new ArrayList<>(
         estados.stream().filter(p -> !p.isAccesible()).collect(Collectors.toList())
     );
