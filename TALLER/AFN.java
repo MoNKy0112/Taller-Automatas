@@ -203,11 +203,13 @@ public class AFN {
                 System.out.println(estado.toString());
             }
             System.out.println("#transitions");
-            System.out.println(this.getFuncionDeTransicion());
+            //System.out.println(this.getFuncionDeTransicion());
             for(Estado estado : estados){
-                System.out.println(funcionDeTransicion.get(estado));
+                //System.out.println(funcionDeTransicion.get(estado));
                 for(char simbolo : alfabeto.getSimbolos()){
-                    System.out.println(simbolo+":"+funcionDeTransicion.get(estado).get(simbolo));
+                    if(funcionDeTransicion.containsKey(estado))
+                    if(funcionDeTransicion.get(estado).containsKey(simbolo))
+                    //System.out.println(simbolo+":"+funcionDeTransicion.get(estado).get(simbolo));
                     System.out.println(estado.toString()+":"+simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
                 }
             }
@@ -220,7 +222,7 @@ public class AFN {
                     // handle exception
                 }
             }
-            System.out.println("11111111111111111");
+            //System.out.println("11111111111111111");
     }
 
     private boolean contieneEstado(Estado estado){
@@ -372,16 +374,18 @@ public class AFN {
                 writer.println(estado.toString());
             }
             writer.println("#transitions");
-            System.out.println("tramsitions");
             for(Estado estado : estados){
                 for(char simbolo : alfabeto.getSimbolos()){
-                    if(!funcionDeTransicion.get(estado).get(simbolo).contains(null)){
-                        writer.print(estado.toString()+":"+simbolo+">");
-                        List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
-                        System.out.println(funcionDeTransicion.get(estado).get(simbolo));
-                        for(int i=0;i<estadosDest.size()-1;i++) writer.print(estadosDest.get(i)+";");
-                        writer.print(estadosDest.get(estadosDest.size()-1));
-                        writer.print("\n");
+                    if(funcionDeTransicion.containsKey(estado)){
+                        if(funcionDeTransicion.get(estado).containsKey(simbolo)){
+                            if (!funcionDeTransicion.get(estado).get(simbolo).contains(null)) {
+                                writer.print(estado.toString() + ":" + simbolo + ">");
+                                List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
+                                for (int i = 0; i < estadosDest.size() - 1; i++) writer.print(estadosDest.get(i) + ";");
+                                writer.print(estadosDest.get(estadosDest.size() - 1));
+                                writer.print("\n");
+                            }
+                        }
                     }
                 }
             }
@@ -416,7 +420,17 @@ public class AFN {
             for(Estado estado : estados){
                 writer.print(estado.toString()+":");
                 for(char simbolo : alfabeto.getSimbolos()){
-                    writer.println(simbolo+">"+funcionDeTransicion.get(estado).get(simbolo).toString());
+                    if(funcionDeTransicion.containsKey(estado)){
+                        if(funcionDeTransicion.get(estado).containsKey(simbolo)){
+                            if (!funcionDeTransicion.get(estado).get(simbolo).contains(null)) {
+                                writer.print(estado.toString() + ":" + simbolo + ">");
+                                List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
+                                for (int i = 0; i < estadosDest.size() - 1; i++) writer.print(estadosDest.get(i) + ";");
+                                writer.print(estadosDest.get(estadosDest.size() - 1));
+                                writer.print("\n");
+                            }
+                        }
+                    }
                 }
             }
             writer.close();
@@ -433,9 +447,11 @@ public class AFN {
         Map<String,Estado> mapEstados = new HashMap<>();
         queue.addAll(afn.getEstados());
         nuevosEstados.addAll(queue);
+        System.out.println("TABLA TRANSICIONES");
         while(!queue.isEmpty()){
             Estado estado = queue.poll();
             if(!nuevosEstados.contains(estado))nuevosEstados.add(estado);
+            
             for(char simbolo:afn.getAlfabeto().getSimbolos()){
                 Estado[] estadosSig = null;
                 Estado[] estadosInt = estado.getEstados();
@@ -482,16 +498,17 @@ public class AFN {
                     }
                     if(newEstado!=null)
                     transicion.put(simbolo, newEstado);
-                    //System.out.println(simbolo+"="+transicion.get(simbolo));
+                    //System.out.println(estado+"-"+simbolo+"="+transicion.get(simbolo));
                     //System.out.println(nuevosEstados);
                     if(newEstado!=null && !nuevosEstados.contains(newEstado)){
                         queue.offer(newEstado);
                     }
                 }
                 funcionDeTransicionAFD.put(estado, transicion);
-                //System.out.println(estado+"====="+funcionDeTransicionAFD.get(estado));
+                
+                    System.out.print(estado.toString()+"="+funcionDeTransicionAFD.get(estado).get(simbolo)+"  |  ");
             }
-            
+            System.out.println();
         }
         
         
@@ -540,6 +557,8 @@ public class AFN {
         List<Estado> listaEstados = new ArrayList<>();
         for (Estado est : estados){
             if(procesarCadenaConDetalles(est, cadena.substring(1),listaEstados)){
+                listaEstados.add(0, est);
+                listaEstados.add(0, estadoActual);
                 System.out.println(listaEstados);
                 System.out.println(true);
                 return true;
@@ -571,9 +590,6 @@ public class AFN {
     public int computarTodosLosProcesamientos(String cadena,String nombreArchivo){
         Estado estadoActual = estadoInicial;
         List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
-        List<Estado> procAcep = new ArrayList<>();
-        List<Estado> procAbort = new ArrayList<>();
-        List<Estado> procRech = new ArrayList<>();
         List<Estado> listaEstados = new ArrayList<>();
         File file = null;
         for(int i = 0;i<3;i++){
@@ -651,7 +667,60 @@ public class AFN {
     }
 
     public void ProcesarListaCadenas(ArrayList<String> listaCadenas, String nombreArchivo, boolean imprimirPantalla){
-        
+        boolean acept=false;
+        String nombreAarchivo = "listaCadenasAFN";
+        try {
+            PrintWriter writer = new PrintWriter(nombreAarchivo+".txt", "UTF-8");
+            for(String cadena:listaCadenas){
+                acept=false;
+                Estado estadoActual = estadoInicial;
+                List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+                List<Estado> listaEstados = new ArrayList<>();
+                writer.print(cadena+"\t");
+                if(imprimirPantalla)System.out.print(cadena+"\t");
+                for (Estado est : estados){
+                    if(procesarListaCadenaConDetalles(est, cadena.substring(1),listaEstados)){
+                        listaEstados.add(0, est);
+                        listaEstados.add(0, estadoActual);
+                        for(int i=0;i<cadena.length();i++){
+                            writer.print("-> ("+listaEstados.get(i)+","+cadena.charAt(i)+")");
+                            if(imprimirPantalla)System.out.print("-> ("+listaEstados.get(i)+","+cadena.charAt(i)+")");
+                        }
+                        writer.println("\t"+true);
+                        System.out.println("\t"+true);
+                        acept=true;
+                        break;
+                    }
+                }
+                if(!acept){
+                    writer.println("\t"+true);
+                    System.out.println("\t"+false);
+                }            
+            }
+            writer.close();
+        } catch (Exception e) {
+            System.out.println("Error con archivo");
+        } 
+    }
+    
+    private boolean procesarListaCadenaConDetalles(Estado estado,String cadena,List<Estado> listaEstados){
+        Estado estadoActual = estado;
+        //System.out.println(cadena.isEmpty()+"-tam:"+cadena.length());
+        if(!cadena.isEmpty()){
+            //System.out.println(estadoActual+"--"+ cadena.charAt(0)+"="+transiciones(estadoActual, cadena.charAt(0)));
+            List<Estado> estados = transiciones(estadoActual, cadena.charAt(0));
+            if (estados!=null){
+                for (Estado est : estados){
+                    if(procesarCadenaConDetalles(est, cadena.substring(1),listaEstados)){
+                        listaEstados.add(0, est);
+                        return true;
+                    }
+                }
+            }
+        }else{
+            return estadosDeAceptacion.contains(estadoActual) ? true : false;
+        }
+        return false;
     }
 
     public boolean procesarCadenaConversion(String cadena){
@@ -719,34 +788,56 @@ public class AFN {
     }
 
     public static void main(String[] args){
-        /*char[] simbolos= {'0','1'};
-        Alfabeto alf = new Alfabeto(simbolos);
-        ArrayList<Estado> estados= new ArrayList<>();
-        int cantEstados = 3;
-        for(int i=0;i<cantEstados;i++)estados.add(new Estado());
-        HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
+        // char[] simbolos= {'0','1'};
+        // Alfabeto alf = new Alfabeto(simbolos);
+        // ArrayList<Estado> estados= new ArrayList<>();
+        // int cantEstados = 3;
+        // for(int i=0;i<cantEstados;i++)estados.add(new Estado());
+        // HashMap<Estado, HashMap<Character, List<Estado>>> funcionDeTransicion = new HashMap<>();
         
-        AFN afn = new AFN(alf,estados,funcionDeTransicion);
-        afn.fillTransitions();
-        afn.setEstadoInicial(afn.getEstados().get(0));
-        ArrayList<Estado> estadosAcep = new ArrayList<>();
-        estadosAcep.add(afn.getEstados().get(2));
-        afn.setEstadosDeAceptacion(estadosAcep);
-        System.out.println(afn.getFuncionDeTransicion());
-        afn.exportar("testAFN");
-        */
-        AFN afn2 = new AFN("testAFN");
-        System.out.println(afn2.procesarCadenaConversion("101"));
+        // AFN afn = new AFN(alf,estados,funcionDeTransicion);
+        // afn.fillTransitions();
+        // afn.setEstadoInicial(afn.getEstados().get(0));
+        // ArrayList<Estado> estadosAcep = new ArrayList<>();
+        // estadosAcep.add(afn.getEstados().get(2));
+        // afn.setEstadosDeAceptacion(estadosAcep);
+        // System.out.println(afn.getFuncionDeTransicion());
+        // afn.exportar("testAFN2");
+        
+        AFN afn2 = new AFN("testAFN2AFD");
+        afn2.imprimirAFNSimplificado();
+        // System.out.println("PROCESAR CADENAS");
+        // ArrayList<String> listaCadenas= new ArrayList<>();
+        // listaCadenas.add("0001");
+        // listaCadenas.add("01111");
+        // listaCadenas.add("0101");
+        // afn2.ProcesarListaCadenas(listaCadenas,"ListaCadenasAFN",true);  
+        
+        // System.out.println("ESTADOS INACCESIBLES");
+        // System.out.println(afn2.hallarEstadosInaccesibles());
+        //System.out.println(afn2.procesarCadenaConversion("101"));
         //System.out.println(afn2.computarTodosLosProcesamientos("001110100101001011011", "afnProcesos"));
         //System.out.println("----------------AFN2-----------");
         //System.out.println(afn2.getFuncionDeTransicion());
         AFD afd = afn2.AFNtoAFD(afn2);
+        System.out.println("NUEVA FUNCION DE TRANSICION");
+        System.out.println(afd.getFuncionDeTransicion());
+        System.out.println("Estados de aceptacion");
+        System.out.println(afd.getEstadosDeAceptacion());
+        try {
+            System.in.read();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
         afd.verificarCorregirCompletitudAFD();
         afd.hallarEstadosInaccesibles();
-        afd.simplificarAFD(afd);
+        System.out.println("PROCESAR CADENA");
+        String[] listaCadenas = {"01001","0100"};
+        afd.procesarListaCadenas(listaCadenas,"listacadenasConversion",true);
+        //afd.imprimirAFDSimplificado();
+        //afd.simplificarAFD(afd);
         // //System.out.println(afd.getFuncionDeTransicion());
         // System.out.println(afn2.procesarCadenaConDetalles("000001"));
         // System.out.println(afn2.procesarCadenaConDetalles("00000111"));
     }
-
 }

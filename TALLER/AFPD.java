@@ -331,8 +331,9 @@ public class AFPD {
                 if(imprimirPantalla)System.out.print(cadena+"\t");
                 Character parametro=null,operacion = null;
                 pila.clear();
-                System.out.println("Cadena: "+cadena);
-                System.out.print("("+estadoActual+","+cadena+","+pila+")");
+                //System.out.println("Cadena: "+cadena);
+                writer.print("("+estadoActual+","+cadena+","+pila+")");
+                if(imprimirPantalla)System.out.print("("+estadoActual+","+cadena+","+pila+")");
                 for(int i=0;i<cadena.length();i++){
                     if(funcionDeTransicion.get(estadoActual).containsKey('$')){
                         ArrayList<Character[]> lista = funcionDeTransicionPila.get(estadoActual).get('$');
@@ -343,14 +344,16 @@ public class AFPD {
                                 break;
                             }
                             if(j==lista.size()-1){
-                                System.out.println("\tno");
+                                writer.println("\t"+"no");
+                                if(imprimirPantalla)System.out.println("\tno");
                                 jump=true;
                                 break;
                             }
                         }
                         if(jump)break;
                         estadoActual = transicion(estadoActual, '$');
-                        System.out.print("->("+estadoActual+","+cadena.substring(i+1, cadena.length())+","+pila+")");
+                        writer.print("->("+estadoActual+","+cadena.substring(i+1, cadena.length())+","+pila+")");
+                        if(imprimirPantalla)System.out.print("->("+estadoActual+","+cadena.substring(i+1, cadena.length())+","+pila+")");
                         i--;
                     }else{
                         ArrayList<Character[]> lista = funcionDeTransicionPila.get(estadoActual).get(cadena.charAt(i));
@@ -361,22 +364,26 @@ public class AFPD {
                                 break;
                             }
                             if(j==lista.size()-1){
-                                System.out.println("\tno");
+                                writer.println("\t"+"no");
+                                if(imprimirPantalla)System.out.println("\tno");
                                 jump=true;
                                 break;
                             }
                         }
                         if(jump)break;
                         estadoActual = transicion(estadoActual, cadena.charAt(i));
-                        System.out.print("->("+estadoActual+","+cadena.substring(i+1, cadena.length())+","+pila+")");
+                        writer.print("->("+estadoActual+","+cadena.substring(i+1, cadena.length())+","+pila+")");
+                        if(imprimirPantalla)System.out.print("->("+estadoActual+","+cadena.substring(i+1, cadena.length())+","+pila+")");
                     }
                 }
                 if(jump)continue;
                 if(estadosDeAceptacion.contains(estadoActual) && pila.empty()){
-                    System.out.println("\tyes");
+                    writer.println("\tyes");
+                    if(imprimirPantalla)System.out.println("\tyes");
                     continue;
                 }else{
-                    System.out.println("\tno");
+                    writer.println("\tno");
+                    if(imprimirPantalla)System.out.println("\tno");
                     continue;
                 }
             }
@@ -527,35 +534,49 @@ public class AFPD {
 
 
     public static void main(String[] args){
-        char[] simbolos = {'a','b'};
-        char[] simbolos2 = {'A'};
-        Alfabeto alf = new Alfabeto(simbolos);
-        Alfabeto alfp = new Alfabeto(simbolos2);
-        int numEstados = 3;
-        ArrayList<Estado> estados = new ArrayList<Estado>();
-        for (int i = 0; i < numEstados; i++) {
-            estados.add(new Estado());
-        }  
-        HashMap<Estado, HashMap<Character ,Estado>> funcionDeTransicion = new HashMap<>();
-        HashMap<Estado, HashMap<Character,ArrayList<Character[]>>> funcionDeTransicionPila= new HashMap<>();
-        AFPD afpd = new AFPD(alf, alfp, estados, funcionDeTransicion, funcionDeTransicionPila);
-        afpd.setEstadoInicial(estados.get(0));
-        ArrayList<Estado> estadosAcept = new ArrayList<>();
-        estadosAcept.add(estados.get(1));
-        estadosAcept.add(estados.get(0));
-        afpd.setEstadosDeAceptacion(estadosAcept);
-        afpd.crearTransicion(estados.get(0), estados.get(0), 'a', '$', 'A');
-        afpd.crearTransicion(estados.get(0), estados.get(1), 'b', 'A', '$');
-        afpd.crearTransicion(estados.get(1), estados.get(1), 'b', 'A', '$');
-        //System.out.println(funcionDeTransicion);
-        //System.out.println(funcionDeTransicion);
-        //System.out.println(afpd.procesarCadenaConDetalles("aaabbb"));
-        afpd.exportar("probarAFPD2");
-        // AFPD afpd2 = new AFPD("probarAFPD2");
-        // afpd2.procesarCadenaConDetalles("aaaabbb");
+        //PRUEBAFACTOR2
+        // AFPD afpd2 = new AFPD("probarAFPD");
+        // afpd2.toStringAFPD();
+        //PRUEBAFACTOR3
+        // AFPD afpd2 = new AFPD("probarAFPD");
+        // afpd2.toStringAFPD();
+        ////PRUEBAFACTOR4
+        // char[] simbolos = {'a','b'};
+        // char[] simbolos2 = {'A'};
+        // Alfabeto alf = new Alfabeto(simbolos);
+        // Alfabeto alfp = new Alfabeto(simbolos2);
+        // int numEstados = 3;
+        // ArrayList<Estado> estados = new ArrayList<Estado>();
+        // for (int i = 0; i < numEstados; i++) {
+        //     estados.add(new Estado());
+        // }  
+        // HashMap<Estado, HashMap<Character ,Estado>> funcionDeTransicion = new HashMap<>();
+        // HashMap<Estado, HashMap<Character,ArrayList<Character[]>>> funcionDeTransicionPila= new HashMap<>();
+        // AFPD afpd = new AFPD(alf, alfp, estados, funcionDeTransicion, funcionDeTransicionPila);
+        // afpd.setEstadoInicial(estados.get(0));
+        // ArrayList<Estado> estadosAcept = new ArrayList<>();
+        // estadosAcept.add(estados.get(1));
+        // estadosAcept.add(estados.get(0));
+        // afpd.setEstadosDeAceptacion(estadosAcept);
+        // afpd.crearTransicion(estados.get(0), estados.get(0), 'a', '$', 'A');
+        // afpd.crearTransicion(estados.get(0), estados.get(1), 'b', 'A', '$');
+        // afpd.crearTransicion(estados.get(1), estados.get(1), 'a', '$', 'A');
+        // afpd.exportar("probarAFPD2");
+        // afpd.toStringAFPD();
+        ////PRUEBAFACTOR5
+        // AFPD afpd = new AFPD("probarAFPD");
+        // System.out.println(afpd.procesarCadenaConDetalles("aaabbb"));
+        ////PRUEBAFACTOR6
+        // AFPD afpd = new AFPD("probarAFPD");
+        // ArrayList<String> cadenas = new ArrayList<>();
+        // cadenas.add("aabb");
+        // cadenas.add("aaabb");
+        // afpd.procesarListaCadenas(cadenas, null, true);
+        ////PRUEBAFACTOR8
+        AFPD afpd = new AFPD("probarAFPD");
         ArrayList<String> cadenas = new ArrayList<>();
-        cadenas.add("aabb");
-        cadenas.add("aaabb");
-        afpd.procesarListaCadenas(cadenas, null, false);
+        cadenas.add("aa");
+        cadenas.add("ab");
+        afpd.procesarListaCadenas(cadenas, "cadenasAFPD", true);
     }
 }

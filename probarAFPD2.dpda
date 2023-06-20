@@ -16,4 +16,4 @@ A
 #transitions
 q0:a:$>q0:A
 q0:b:A>q1:$
-q1:b:A>q1:$
+q1:a:$>q1:A

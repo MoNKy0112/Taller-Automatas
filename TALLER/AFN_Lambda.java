@@ -516,16 +516,18 @@ public class AFN_Lambda {
                 writer.println(estado.toString());
             }
             writer.println("#transitions");
-            System.out.println("tramsitions");
             for (Estado estado : estados) {
                 for (char simbolo : alfabeto.getSimbolos()) {
-                    if (!funcionDeTransicion.get(estado).get(simbolo).contains(null)) {
-                        writer.print(estado.toString() + ":" + simbolo + ">");
-                        List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
-                        System.out.println(funcionDeTransicion.get(estado).get(simbolo));
-                        for (int i = 0; i < estadosDest.size() - 1; i++) writer.print(estadosDest.get(i) + ";");
-                        writer.print(estadosDest.get(estadosDest.size() - 1));
-                        writer.print("\n");
+                    if(funcionDeTransicion.containsKey(estado)){
+                        if(funcionDeTransicion.get(estado).containsKey(simbolo)){
+                            if (!funcionDeTransicion.get(estado).get(simbolo).contains(null)) {
+                                writer.print(estado.toString() + ":" + simbolo + ">");
+                                List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
+                                for (int i = 0; i < estadosDest.size() - 1; i++) writer.print(estadosDest.get(i) + ";");
+                                writer.print(estadosDest.get(estadosDest.size() - 1));
+                                writer.print("\n");
+                            }
+                        }
                     }
                 }
             }

@@ -130,7 +130,7 @@ public class MT {
                 }
                 while(status==4 && flag){
                     Character[] simbolos = new Character[2];
-                    String[] p1 = linea.split("?");
+                    String[] p1 = linea.split("\\?");
                     String[] parts = p1[0].split(":");
                     Estado estadoOrigen = mapEstados.get(parts[0]);
                     char simbolo = parts[1].toCharArray()[0];
@@ -183,6 +183,7 @@ public class MT {
         this.alfabetoCinta = alfabetoC;
         this.estados = estados;
         this.funcionDeTransicion = funcionDeTransicion;
+        this.funcionDeTransicionCinta = funcionDeTransicionCinta;
         //System.out.println(this.getFuncionDeTransicion());
         //correjirCompletitud
         this.setEstadosDeAceptacion(estados.stream().filter(est -> est.isAceptacion())
@@ -449,45 +450,60 @@ public class MT {
     }
 
     public static void main(String[] args){
-        char[] simbolos = {'a','b'};
-        char[] simbolosCinta = {'a','b','X','Y','Z'};
-        Alfabeto alfabetoEntrada = new Alfabeto(simbolos);
-        Alfabeto alfabetoCinta = new Alfabeto(simbolosCinta);
-        int numEstados = 6;
-        ArrayList<Estado> estados = new ArrayList<Estado>();
-        for (int i = 0; i < numEstados; i++) {
-            estados.add(new Estado());
-        }  
-        HashMap<Estado, HashMap<Character ,Estado>> funcionDeTransicion = new HashMap<>();
-        HashMap<Estado, HashMap<Character,Character[]>> funcionDeTransicionCinta= new HashMap<>();
-        MT mt=new MT(alfabetoEntrada,alfabetoCinta,estados,funcionDeTransicion,funcionDeTransicionCinta);
-        mt.setEstadoInicial(estados.get(0));
-        ArrayList<Estado> estadosAcept = new ArrayList<>();
-        estadosAcept.add(estados.get(5));
-        mt.setEstadosDeAceptacion(estadosAcept);
-        mt.crearTransicion(estados.get(0), estados.get(1), 'a', 'X', '>');
-        mt.crearTransicion(estados.get(0), estados.get(4), 'Y', 'Y', '>');
-        mt.crearTransicion(estados.get(0), estados.get(5), '!', '!', '-');
-        mt.crearTransicion(estados.get(1), estados.get(1), 'a', 'a', '>');
-        mt.crearTransicion(estados.get(1), estados.get(1), 'Y', 'Y', '>');
-        mt.crearTransicion(estados.get(1), estados.get(2), 'b', 'Y', '>');
-        mt.crearTransicion(estados.get(2), estados.get(2), 'b', 'b', '>');
-        mt.crearTransicion(estados.get(2), estados.get(2), 'Z', 'Z', '>');
-        mt.crearTransicion(estados.get(2), estados.get(3), 'c', 'Z', '<');
-        mt.crearTransicion(estados.get(3), estados.get(0), 'X', 'X', '>');
-        mt.crearTransicion(estados.get(3), estados.get(3), 'a', 'a', '<');
-        mt.crearTransicion(estados.get(3), estados.get(3), 'b', 'b', '<');
-        mt.crearTransicion(estados.get(3), estados.get(3), 'Y', 'Y', '<');
-        mt.crearTransicion(estados.get(3), estados.get(3), 'Z', 'Z', '<');
-        mt.crearTransicion(estados.get(4), estados.get(4), 'Y', 'Y', '>');
-        mt.crearTransicion(estados.get(4), estados.get(4), 'Z', 'Z', '>');
-        mt.crearTransicion(estados.get(4), estados.get(5), '!', '!', '-');
-        ArrayList<String> cadenas = new ArrayList<>();
-        cadenas.add("aabbcc");cadenas.add("aaabbcc");cadenas.add("aaabbbccc");cadenas.add("aabbccc");
-        System.out.println(mt.procesarCadenaConDetalle(cadenas.get(0)));
-        mt.procesarListaCadenas(cadenas, "cadenasMT", false);
         
-        mt.exportar("ProbarMT");
-        mt.toStringMT();
+        ////PRUEBAFACTOR28
+        // MT mt=new MT("probarMT");
+        // mt.toStringMT();
+        ////PRUEBAFACTOR29
+        // MT mt=new MT("probarMT");
+        // mt.toStringMT();
+
+        ////PRUEBAFACTOR30
+        // char[] simbolos = {'a','b'};
+        // char[] simbolosCinta = {'a','b','X','Y','Z'};
+        // Alfabeto alfabetoEntrada = new Alfabeto(simbolos);
+        // Alfabeto alfabetoCinta = new Alfabeto(simbolosCinta);
+        // int numEstados = 6;
+        // ArrayList<Estado> estados = new ArrayList<Estado>();
+        // for (int i = 0; i < numEstados; i++) {
+        //     estados.add(new Estado());
+        // }  
+        // HashMap<Estado, HashMap<Character ,Estado>> funcionDeTransicion = new HashMap<>();
+        // HashMap<Estado, HashMap<Character,Character[]>> funcionDeTransicionCinta= new HashMap<>();
+        // MT mt=new MT(alfabetoEntrada,alfabetoCinta,estados,funcionDeTransicion,funcionDeTransicionCinta);
+        // mt.setEstadoInicial(estados.get(0));
+        // ArrayList<Estado> estadosAcept = new ArrayList<>();
+        // estadosAcept.add(estados.get(5));
+        // mt.setEstadosDeAceptacion(estadosAcept);
+        // mt.crearTransicion(estados.get(0), estados.get(1), 'a', 'X', '>');
+        // mt.crearTransicion(estados.get(0), estados.get(4), 'Y', 'Y', '>');
+        // mt.crearTransicion(estados.get(0), estados.get(5), '!', '!', '-');
+        // mt.crearTransicion(estados.get(1), estados.get(1), 'a', 'a', '>');
+        // mt.crearTransicion(estados.get(1), estados.get(1), 'Y', 'Y', '>');
+        // mt.crearTransicion(estados.get(1), estados.get(2), 'b', 'Y', '>');
+        // mt.crearTransicion(estados.get(2), estados.get(2), 'b', 'b', '>');
+        // mt.crearTransicion(estados.get(2), estados.get(2), 'Z', 'Z', '>');
+        // mt.crearTransicion(estados.get(2), estados.get(3), 'c', 'Z', '<');
+        // mt.crearTransicion(estados.get(3), estados.get(0), 'X', 'X', '>');
+        // mt.crearTransicion(estados.get(3), estados.get(3), 'a', 'a', '<');
+        // mt.crearTransicion(estados.get(3), estados.get(3), 'b', 'b', '<');
+        // mt.crearTransicion(estados.get(3), estados.get(3), 'Y', 'Y', '<');
+        // mt.crearTransicion(estados.get(3), estados.get(3), 'Z', 'Z', '<');
+        // mt.crearTransicion(estados.get(4), estados.get(4), 'Y', 'Y', '>');
+        // mt.crearTransicion(estados.get(4), estados.get(4), 'Z', 'Z', '>');
+        // mt.crearTransicion(estados.get(4), estados.get(5), '!', '!', '-');
+        // mt.exportar("ProbarMT2");
+        // mt.toStringMT();
+        ////PRUEBAFACTOR31
+        // MT mt = new MT("probarMT2");
+        // System.out.println(mt.procesarCadenaConDetalle("aabbcc"));
+        //PRUEBAFACTOR32
+        // MT mt = new MT("probarMT2");
+        // ArrayList<String> cadenas = new ArrayList<>();
+        // cadenas.add("aabbcc");cadenas.add("aaabbcc");cadenas.add("aaabbbccc");cadenas.add("aabbccc");
+        // mt.procesarListaCadenas(cadenas, "cadenasMT", true);
+        ////PRUEBAFACTOR33
+        // MT mt = new MT("probarMT2");
+        // System.out.println(mt.procesarFuncion("aabbcc"));
     }
 }

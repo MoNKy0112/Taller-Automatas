@@ -103,6 +103,8 @@ public class AFGraphGUI extends JFrame {
                 //System.out.println(estado+"::"+estado.isAceptacion());
                 if (estado.isAceptacion()) {
                     g.setColor(Color.CYAN);
+                } else if(estado.isInicial()){
+                    g.setColor(Color.green);
                 } else {
                     g.setColor(Color.WHITE);
                 }
@@ -174,7 +176,8 @@ public class AFGraphGUI extends JFrame {
                     } else {
                         g2d.setColor(new Color(0, 0, 0, 128)); // Negro semitransparente
                     }
-
+                    Font newfont = g2d.getFont().deriveFont(26F);
+                    g.setFont(newfont);
                     // Dibujar el símbolo de la transición
                     g2d.drawString(Character.toString(simbolo), (start.x + end.x) / 2, (start.y + end.y) / 2);
                 }
@@ -226,6 +229,8 @@ public class AFGraphGUI extends JFrame {
                 //System.out.println(estado+"::"+estado.isAceptacion());
                 if (estado.isAceptacion()) {
                     g.setColor(Color.CYAN);
+                } else if(estado.isInicial()){
+                    g.setColor(Color.GREEN);
                 } else {
                     g.setColor(Color.WHITE);
                 }
@@ -253,52 +258,57 @@ public class AFGraphGUI extends JFrame {
                 Point start = nodePositions.get(origen);
 
                 for (char simbolo : afn.getAlfabeto().getSimbolos()) {
-                    ArrayList<Estado> destinos = (ArrayList<Estado>) afn.getFuncionDeTransicion().get(origen).get(simbolo);
-                    if (destinos == null) {
-                        continue;
-                    }
-                    for(Estado destino : destinos){
-                        Point end = nodePositions.get(destino);
+                    if(afn.getFuncionDeTransicion().containsKey(origen)){
+                        if(afn.getFuncionDeTransicion().get(origen).containsKey(simbolo)){
+                            ArrayList<Estado> destinos = (ArrayList<Estado>) afn.getFuncionDeTransicion().get(origen).get(simbolo);
+                            if (destinos == null) {
+                                continue;
+                            }
+                            for(Estado destino : destinos){
+                                Point end = nodePositions.get(destino);
 
-                        // Calcular el ángulo y la posición de la flecha
-                        double angle = Math.atan2(end.y - start.y, end.x - start.x);
-                        int arrowX = (int) (end.x - ARROW_LENGTH * Math.cos(angle));
-                        int arrowY = (int) (end.y - ARROW_LENGTH * Math.sin(angle));
+                                // Calcular el ángulo y la posición de la flecha
+                                double angle = Math.atan2(end.y - start.y, end.x - start.x);
+                                int arrowX = (int) (end.x - ARROW_LENGTH * Math.cos(angle));
+                                int arrowY = (int) (end.y - ARROW_LENGTH * Math.sin(angle));
 
-                        // Verificar si la posición de la flecha está ocupada
-                        if (arrowPositions.contains(new Point(arrowX, arrowY))) {
-                            // Calcular una nueva posición para la flecha
-                            double newAngle = angle + ARROW_ANGLE;
+                                // Verificar si la posición de la flecha está ocupada
+                                if (arrowPositions.contains(new Point(arrowX, arrowY))) {
+                                    // Calcular una nueva posición para la flecha
+                                    double newAngle = angle + ARROW_ANGLE;
 
-                            arrowX = (int) (end.x - ARROW_LENGTH * Math.cos(newAngle));
-                            arrowY = (int) (end.y - ARROW_LENGTH * Math.sin(newAngle));
+                                    arrowX = (int) (end.x - ARROW_LENGTH * Math.cos(newAngle));
+                                    arrowY = (int) (end.y - ARROW_LENGTH * Math.sin(newAngle));
+                                }
+
+                                // Agregar la posición de la flecha al conjunto
+                                arrowPositions.add(new Point(arrowX, arrowY));
+
+                                // Calcular las coordenadas de los puntos de la flecha
+                                int[] arrowXPoints = { arrowX, (int) (arrowX - ARROW_LENGTH * Math.cos(angle + ARROW_ANGLE)),
+                                        (int) (arrowX - ARROW_LENGTH * Math.cos(angle - ARROW_ANGLE)) };
+                                int[] arrowYPoints = { arrowY, (int) (arrowY - ARROW_LENGTH * Math.sin(angle + ARROW_ANGLE)),
+                                        (int) (arrowY - ARROW_LENGTH * Math.sin(angle - ARROW_ANGLE)) };
+
+                                // Dibujar la flecha
+                                Graphics2D g2d = (Graphics2D) g;
+                                g2d.setStroke(new BasicStroke(2));
+                                g2d.setColor(Color.BLACK);
+                                g2d.draw(new Line2D.Double(start.x, start.y, end.x, end.y));
+                                g2d.fill(new Polygon(arrowXPoints, arrowYPoints, 3));
+
+                                // Cambiar la opacidad del texto
+                                if (selectedNodes.contains(origen) && selectedNodes.contains(destino)) {
+                                    g2d.setColor(new Color(0, 0, 0, 255)); // Negro opaco
+                                } else {
+                                    g2d.setColor(new Color(0, 0, 0, 128)); // Negro semitransparente
+                                }
+                                Font newfont = g2d.getFont().deriveFont(26F);
+                                g.setFont(newfont);
+                                // Dibujar el símbolo de la transición
+                                g2d.drawString(Character.toString(simbolo), (start.x + end.x) / 2, (start.y + end.y) / 2);
+                            }
                         }
-
-                        // Agregar la posición de la flecha al conjunto
-                        arrowPositions.add(new Point(arrowX, arrowY));
-
-                        // Calcular las coordenadas de los puntos de la flecha
-                        int[] arrowXPoints = { arrowX, (int) (arrowX - ARROW_LENGTH * Math.cos(angle + ARROW_ANGLE)),
-                                (int) (arrowX - ARROW_LENGTH * Math.cos(angle - ARROW_ANGLE)) };
-                        int[] arrowYPoints = { arrowY, (int) (arrowY - ARROW_LENGTH * Math.sin(angle + ARROW_ANGLE)),
-                                (int) (arrowY - ARROW_LENGTH * Math.sin(angle - ARROW_ANGLE)) };
-
-                        // Dibujar la flecha
-                        Graphics2D g2d = (Graphics2D) g;
-                        g2d.setStroke(new BasicStroke(2));
-                        g2d.setColor(Color.BLACK);
-                        g2d.draw(new Line2D.Double(start.x, start.y, end.x, end.y));
-                        g2d.fill(new Polygon(arrowXPoints, arrowYPoints, 3));
-
-                        // Cambiar la opacidad del texto
-                        if (selectedNodes.contains(origen) && selectedNodes.contains(destino)) {
-                            g2d.setColor(new Color(0, 0, 0, 255)); // Negro opaco
-                        } else {
-                            g2d.setColor(new Color(0, 0, 0, 128)); // Negro semitransparente
-                        }
-
-                        // Dibujar el símbolo de la transición
-                        g2d.drawString(Character.toString(simbolo), (start.x + end.x) / 2, (start.y + end.y) / 2);
                     }
                 }
             }

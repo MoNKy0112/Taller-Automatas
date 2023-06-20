@@ -86,12 +86,13 @@ public class Estado {
 
     @Override
     public String toString() {
-        if(estados!=null){
-            String txt = "";
+        if(getEstados()!=null){
+            String txt = "{";
             for (int i=0;i<estados.length-1;i++){
                 txt=txt+estados[i].toString()+",";
             }
-            txt+=estados[estados.length-1].toString();
+            txt+=estados[estados.length-1].toString()+"}";
+            return txt;
         }
         return "q" + id;
     }
