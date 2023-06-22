@@ -486,6 +486,20 @@ public class AFN_Lambda {
                 writer.println(estado.toString());
             }
             writer.println("#transitions");
+<<<<<<< HEAD
+            for (Estado estado : estados) {
+                for (char simbolo : alfabeto.getSimbolos()) {
+                    if(funcionDeTransicion.containsKey(estado)){
+                        if(funcionDeTransicion.get(estado).containsKey(simbolo)){
+                            if (!funcionDeTransicion.get(estado).get(simbolo).contains(null)) {
+                                writer.print(estado.toString() + ":" + simbolo + ">");
+                                List<Estado> estadosDest = funcionDeTransicion.get(estado).get(simbolo);
+                                for (int i = 0; i < estadosDest.size() - 1; i++) writer.print(estadosDest.get(i) + ";");
+                                writer.print(estadosDest.get(estadosDest.size() - 1));
+                                writer.print("\n");
+                            }
+                        }
+=======
             System.out.println("transitions");
             for (Estado estado : estados) {
                 for (char simbolo : alfabeto.getSimbolos()) {
@@ -497,6 +511,7 @@ public class AFN_Lambda {
                             writer.print(estadosDest.get(i) + ";");
                         writer.print(estadosDest.get(estadosDest.size() - 1));
                         writer.print("\n");
+>>>>>>> b424b5e3517261858b5be9e4cb164b499a9ec105
                     }
                 }
             }

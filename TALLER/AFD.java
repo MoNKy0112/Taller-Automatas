@@ -180,17 +180,19 @@ public class AFD {
     // B-3
     public void verificarCorregirCompletitudAFD() {
         Estado estadoLimboNuevo = null;
+        //Revisar cada estado, cada simbolo si existe una determinada transicion
         for (Estado estado : estados) {
             for (char simbolo : alfabeto.getSimbolos()) {
                 if (!funcionDeTransicion.get(estado).containsKey(simbolo)) {
+                    //en caso de no existir transicion, se genera una hacia el limbo nuevo
                     if (estadoLimboNuevo == null) {
                         estadoLimboNuevo = new Estado();
-                        // agregarEstado(estadoLimboNuevo);
                     }
                     agregarTransicionLimbo(estado, simbolo, estadoLimboNuevo);
                 }
             }
         }
+        //agregamos las transiciones del limbo hacia si mismo
         if (estadoLimboNuevo != null) {
             agregarEstado(estadoLimboNuevo);
             for (char simbolo : alfabeto.getSimbolos()) {
@@ -257,6 +259,7 @@ public class AFD {
 
         for (Estado estado : estados) {
             if (!visitados.contains(estado)) {
+                //depth first search para hallar estados no muertos
                 dfsLimbo(estado, visitados, noMuertos);
 
             }
@@ -278,9 +281,10 @@ public class AFD {
     }
 
     // Soporte B-4
+    //depth first search
     private boolean dfsLimbo(Estado estadoActual, Set<Estado> visitados, Set<Estado> noMuertos) {
         visitados.add(estadoActual);
-        System.out.println("visitados:" + visitados);
+        //System.out.println("visitados:" + visitados);
         for (char simbolo : alfabeto.getSimbolos()) {
             Estado estadoSig = transicion(estadoActual, simbolo);
             if (estadoSig != null) {
@@ -319,18 +323,20 @@ public class AFD {
         queue.offer(estadoInicial);
         accesibles.add(estadoInicial);
 
+        //recorremos las trancisiones de cada estado en la cola
         while (!queue.isEmpty()) {
             Estado estadoActual = queue.poll();
-            System.out.println(estadoActual);
+            //System.out.println(estadoActual);
             for (char simbolo : alfabeto.getSimbolos()) {
                 Estado estadoSig = transicion(estadoActual, simbolo);
+                //si el estado no es nulo y tampoco esta en accesibles aun, lo agregamos a la cola
                 if (estadoSig != null && !accesibles.contains(estadoSig)) {
                     accesibles.add(estadoSig);
                     queue.offer(estadoSig);
                 }
             }
         }
-
+        //todos los estaados que no esten en accesibles son añadidos a inaccesibles
         ArrayList<Estado> inaccesibles = new ArrayList<>();
         for (Estado estado : estados) {
             estado.setAccesible(accesibles.contains(estado));
@@ -377,11 +383,11 @@ public class AFD {
             System.out.println(estado.toString());
         }
         System.out.println("#transitions");
-        System.out.println(this.getFuncionDeTransicion());
+        //System.out.println(this.getFuncionDeTransicion());
         for (Estado estado : estados) {
-            System.out.println(funcionDeTransicion.get(estado));
+            //System.out.println(funcionDeTransicion.get(estado));
             for (char simbolo : alfabeto.getSimbolos()) {
-                System.out.println(simbolo + ":" + funcionDeTransicion.get(estado).get(simbolo));
+                //System.out.println(simbolo + ":" + funcionDeTransicion.get(estado).get(simbolo));
                 System.out.println(estado.toString() + ":" + simbolo + ">"
                         + funcionDeTransicion.get(estado).get(simbolo).toString());
             }
@@ -434,7 +440,7 @@ public class AFD {
     public void exportar() {
         String nombreAarchivo = "nuevoAFD";
         try {
-            PrintWriter writer = new PrintWriter("/" + nombreAarchivo + ".dfa", "UTF-8");
+            PrintWriter writer = new PrintWriter(nombreAarchivo + ".dfa", "UTF-8");
             writer.println("#!dfa");
             writer.println("#alphabet");
             for (char simbolo : alfabeto.getSimbolos()) {
@@ -568,7 +574,7 @@ public class AFD {
             for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
                 Estado[] estados = estado.getEstados();
                 String est = afd1.transicion(estados[0], simbolo) + "," + afd2.transicion(estados[1], simbolo);
-                System.out.println(estado + ":" + est + "-> " + estadoMap.get(est));
+                System.out.println(estado + ":" + simbolo + "-> " + estadoMap.get(est));
                 Estado estado1 = estadoMap.get(est);
                 resultado.agregarTransicion(estado, simbolo, estado1);
             }
@@ -611,7 +617,7 @@ public class AFD {
             for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
                 Estado[] estados = estado.getEstados();
                 String est = afd1.transicion(estados[0], simbolo) + "," + afd2.transicion(estados[1], simbolo);
-                System.out.println(estado + ":" + est + "-> " + estadoMap.get(est));
+                System.out.println(estado + ":" + simbolo + "-> " + estadoMap.get(est));
                 Estado estado1 = estadoMap.get(est);
                 resultado.agregarTransicion(estado, simbolo, estado1);
             }
@@ -654,7 +660,7 @@ public class AFD {
             for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
                 Estado[] estados = estado.getEstados();
                 String est = afd1.transicion(estados[0], simbolo) + "," + afd2.transicion(estados[1], simbolo);
-                System.out.println(estado + ":" + est + "-> " + estadoMap.get(est));
+                System.out.println(estado + ":" + simbolo + "-> " + estadoMap.get(est));
                 Estado estado1 = estadoMap.get(est);
                 resultado.agregarTransicion(estado, simbolo, estado1);
             }
@@ -698,7 +704,7 @@ public class AFD {
             for (char simbolo : resultado.getAlfabeto().getSimbolos()) {
                 Estado[] estados = estado.getEstados();
                 String est = afd1.transicion(estados[0], simbolo) + "," + afd2.transicion(estados[1], simbolo);
-                System.out.println(estado + ":" + est + "-> " + estadoMap.get(est));
+                System.out.println(estado + ":" + simbolo + "-> " + estadoMap.get(est));
                 Estado estado1 = estadoMap.get(est);
                 resultado.agregarTransicion(estado, simbolo, estado1);
             }
@@ -960,14 +966,14 @@ public class AFD {
     }
 
     public static void main(String[] args) {
-        char[] simbolos = { 'a' };
-        Alfabeto alf = new Alfabeto(simbolos);
-        int numEstados = 6;
-        ArrayList<Estado> estados = new ArrayList<Estado>();
-        for (int i = 0; i < numEstados; i++) {
-            estados.add(new Estado());
-        }
-        HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion = new HashMap<>();
+        // char[] simbolos = { 'a' ,'b'};
+        // Alfabeto alf = new Alfabeto(simbolos);
+        // int numEstados = 3;
+        // ArrayList<Estado> estados = new ArrayList<Estado>();
+        // for (int i = 0; i < numEstados; i++) {
+        //     estados.add(new Estado());
+        // }
+        // HashMap<Estado, HashMap<Character, Estado>> funcionDeTransicion = new HashMap<>();
         /*
          * for (Estado estado : estados) {
          * HashMap<Character, Estado> transiciones = new HashMap<>();
@@ -977,17 +983,36 @@ public class AFD {
          * funcionDeTransicion.put(estado, transiciones);
          * }
          */
-        AFD afd = new AFD(alf, estados, funcionDeTransicion);
-        afd.fillTransitions();
-        ArrayList<Estado> estadosAcept = new ArrayList<>();
-        estados.get(1).setAceptacion(true);
-        estadosAcept.add(estados.get(1));
-        estados.get(4).setAceptacion(true);
-        estadosAcept.add(estados.get(4));
-        estados.get(0).setInicial(true);
-        afd.setEstadoInicial(estados.get(0));
-        afd.setEstadosDeAceptacion(estadosAcept);
-        AFD afds = afd.simplificarAFD(afd);
-        afds.imprimirAFDSimplificado();
+        AFD afd = new AFD("ejemploSimp");
+        // afd.fillTransitions();
+        // ArrayList<Estado> estadosAcept = new ArrayList<>();
+        // estadosAcept.add(estados.get(2));
+        // afd.setEstadoInicial(estados.get(0));
+        // afd.setEstadosDeAceptacion(estadosAcept);
+        // System.out.println(afd.funcionDeTransicion);
+        // try {
+        //     System.in.read();
+        // } catch (Exception e) {
+        //     // TODO: handle exception
+        // }
+        //afd.verificarCorregirCompletitudAFD();
+        
+
+        afd.imprimirAFDSimplificado();
+        AFD afd2 = afd.simplificarAFD(afd);
+        try {
+            System.in.read();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
+        afd2.imprimirAFDSimplificado();
+        // String[] listaCadenas ={"aab","aaba","baaba"};
+        // afd.procesarListaCadenas(listaCadenas,"ListCadAFD",true);
+
+        //afd.exportar("ejemploProcesar");
+
+        // AFD afds = afd.simplificarAFD(afd);
+        // afds.imprimirAFDSimplificado();
     }
 }
