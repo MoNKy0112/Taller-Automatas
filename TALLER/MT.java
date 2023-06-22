@@ -505,5 +505,6 @@ public class MT {
         ////PRUEBAFACTOR33
         // MT mt = new MT("probarMT2");
         // System.out.println(mt.procesarFuncion("aabbcc"));
+            
     }
 }
